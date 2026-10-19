@@ -1,231 +1,729 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Synapse AI - Lecture Study Assistant</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text: #0f172a;
-            --text-muted: #64748b;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Synapse AI - Spaced Repetition Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            border: '#e2e8f0',
+            background: '#f8fafc',
+            foreground: '#0f172a',
+          }
         }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        h1 {
-            font-size: 2.25rem;
-            margin-bottom: 8px;
-            letter-spacing: -0.02em;
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 1.1rem;
-        }
-
-        .input-section {
-            background: var(--card-bg);
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            margin-bottom: 40px;
-        }
-
-        textarea {
-            width: 100%;
-            height: 140px;
-            padding: 14px;
-            font-size: 15px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            resize: vertical;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        textarea:focus {
-            border-color: var(--primary);
-        }
-
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 15px;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            margin-top: 12px;
-            display: inline-block;
-        }
-
-        .btn:hover {
-            background-color: var(--primary-hover);
-        }
-
-        /* Grid layout for flashcards */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 20px;
-            margin-top: 24px;
-        }
-
-        /* 3D Flip Card Effect */
-        .flashcard-container {
-            background-color: transparent;
-            height: 200px;
-            perspective: 1000px;
-            cursor: pointer;
-        }
-
-        .flashcard-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-        }
-
-        .flashcard-container.flipped .flashcard-inner {
-            transform: rotateY(180deg);
-        }
-
-        .flashcard-front, .flashcard-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            border-radius: 12px;
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: var(--card-bg);
-            border: 1px solid #e2e8f0;
-        }
-
-        .flashcard-back {
-            transform: rotateY(180deg);
-            background-color: #f0f9ff;
-            border-color: #bae6fd;
-        }
-
-        .tag {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #1e40af;
-            background: #dbeafe;
-            padding: 4px 10px;
-            border-radius: 9999px;
-            margin-bottom: 12px;
-        }
-
-        .card-hint {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 12px;
-        }
-    </style>
+      }
+    }
+  </script>
+  <style>
+    .perspective-1000 { perspective: 1000px; }
+    .transform-style-3d { transform-style: preserve-3d; }
+    .backface-hidden { backface-visibility: hidden; }
+    .rotate-y-180 { transform: rotateY(180deg); }
+  </style>
 </head>
-<body>
+<body class="bg-background text-foreground min-h-screen flex flex-col justify-between font-sans antialiased">
 
-    <header>
-        <h1>🧠 Synapse AI</h1>
-        <p class="subtitle">Transform lecture transcripts into study flashcards instantly</p>
-    </header>
-
-    <div class="input-section">
-        <textarea id="lectureInput" placeholder="Paste your lecture notes, key concepts, or text transcript here..."></textarea>
-        <button class="btn" onclick="generateCards()">Generate Flashcards</button>
+  <!-- Top Navigation Bar -->
+  <header class="w-full border-b border-border bg-white px-6 py-4 flex items-center justify-between shadow-xs">
+    <div class="flex items-center space-x-3">
+      <div class="bg-indigo-600 text-white p-2 rounded-lg font-bold text-base shadow-sm">⚡</div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight">Synapse AI</h1>
+        <p class="text-xs text-gray-500">Nebius x NVIDIA 2026 Hackathon</p>
+      </div>
     </div>
+    <nav class="flex space-x-2">
+      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2 text-sm font-medium rounded-lg bg-indigo-50 text-indigo-700 transition-all">Dashboard</button>
+      <button onclick="switchTab('generator')" id="nav-generator" class="px-4 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-all">+ New Deck</button>
+    </nav>
+  </header>
 
-    <div id="results"></div>
+  <!-- Main Content Area -->
+  <main class="w-full max-w-4xl mx-auto p-4 sm:p-6 my-6 flex-1">
 
-    <script>
-        async function generateCards() {
-            const text = document.getElementById('lectureInput').value;
-            const resultsDiv = document.getElementById('results');
-            
-            if (!text.trim()) {
-                alert('Please enter some lecture text first!');
-                return;
-            }
+    <!-- TAB 1: DASHBOARD & SAVED DECKS -->
+    <section id="tab-dashboard" class="space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold tracking-tight">Your Study Activity</h2>
+          <p class="text-sm text-gray-500">Manage your saved decks, track confidence scores, and review anytime.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="startSmartReview()" class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-sm transition-all">
+            Review Due 🔥
+          </button>
+          <button onclick="switchTab('generator')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-sm transition-all">
+            Create Deck 🚀
+          </button>
+        </div>
+      </div>
 
-            resultsDiv.innerHTML = '<p style="text-align:center;">🤖 Generating flashcards with Nebius AI & saving to Supabase...</p>';
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white border border-border rounded-xl p-5 shadow-xs">
+          <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Total Saved Decks</p>
+          <p id="stat-decks" class="text-2xl font-bold mt-1 text-gray-900">0</p>
+        </div>
+        <div class="bg-white border border-border rounded-xl p-5 shadow-xs">
+          <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Flashcards Reviewed</p>
+          <p id="stat-reviews" class="text-2xl font-bold mt-1 text-indigo-600">0</p>
+        </div>
+        <div class="bg-white border border-border rounded-xl p-5 shadow-xs">
+          <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Average Confidence</p>
+          <p id="stat-confidence" class="text-2xl font-bold mt-1 text-emerald-600">0%</p>
+        </div>
+      </div>
 
-            try {
-                const response = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ lectureContent: text })
-                });
+      <!-- Saved Decks List -->
+      <div class="bg-white border border-border rounded-xl p-6 shadow-xs space-y-4">
+        <h3 class="font-semibold text-base">Saved Study Decks</h3>
+        <div id="saved-decks-list" class="space-y-3">
+          <div class="text-center py-8 text-sm text-gray-400 border border-dashed border-border rounded-lg">
+            No decks generated yet. Click "+ New Deck" to get started!
+          </div>
+        </div>
+      </div>
+    </section>
 
-                const data = await response.json();
+    <!-- TAB 2: GENERATOR & SAVE VIEW -->
+    <section id="tab-generator" class="hidden space-y-6 max-w-2xl mx-auto">
+      <div class="bg-white border border-border rounded-xl shadow-xs p-6 space-y-5">
+        <div>
+          <h2 class="text-lg font-semibold">Generate & Save Flashcard Deck</h2>
+          <p class="text-sm text-gray-500">Name your deck, provide your content, and save it directly to your dashboard.</p>
+        </div>
 
-                if (data.success) {
-                    resultsDiv.innerHTML = `
-                        <h2>✨ Generated Flashcards (${data.flashcards.length})</h2>
-                        <p class="subtitle">Click any card to flip and reveal the answer.</p>
-                        <div class="cards-grid" id="cardsGrid"></div>
-                    `;
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Deck Title Name *</label>
+            <input type="text" id="deckTitle" class="w-full rounded-lg border border-border p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" placeholder="e.g. Biology Midterm Chapter 4">
+          </div>
 
-                    const cardsGrid = document.getElementById('cardsGrid');
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Lecture Notes / Content</label>
+            <textarea id="lectureContent" rows="4" class="w-full rounded-lg border border-border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600" placeholder="Paste notes here..."></textarea>
+          </div>
 
-                    data.flashcards.forEach(card => {
-                        const cardElement = document.createElement('div');
-                        cardElement.className = 'flashcard-container';
-                        cardElement.onclick = () => cardElement.classList.toggle('flipped');
-                        
-                        cardElement.innerHTML = `
-                            <div class="flashcard-inner">
-                                <div class="flashcard-front">
-                                    <span class="tag">${card.concept_tag || 'General'}</span>
-                                    <p><strong>${card.question}</strong></p>
-                                    <span class="card-hint">Click to flip 🔄</span>
-                                </div>
-                                <div class="flashcard-back">
-                                    <p>${card.answer}</p>
-                                    <span class="card-hint">Click to flip 🔄</span>
-                                </div>
-                            </div>
-                        `;
-                        cardsGrid.appendChild(cardElement);
-                    });
-                } else {
-                    resultsDiv.innerHTML = `<p style="color: red; text-align:center;">Error: ${data.error}</p>`;
-                }
-            } catch (err) {
-                resultsDiv.innerHTML = `<p style="color: red; text-align:center;">Network error occurred while generating flashcards.</p>`;
-            }
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Or Upload PDF</label>
+              <input type="file" id="pdfFile" accept=".pdf" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+            </div>
+            <div>
+              <label for="cardCount" class="block text-sm font-medium text-gray-700 mb-1">Number of Flashcards</label>
+              <select id="cardCount" class="w-full rounded-lg border border-border p-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                <option value="5">5 Cards</option>
+                <option value="10" selected>10 Cards</option>
+                <option value="15">15 Cards</option>
+                <option value="20">20 Cards</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <label class="flex items-center space-x-2 text-sm text-gray-600 cursor-pointer">
+              <input type="checkbox" id="enableSearch" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+              <span>Enable Tavily Web Search Context</span>
+            </label>
+            <button onclick="handleGenerateAndSave()" id="generateBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-lg text-sm transition-all shadow-sm">
+              Generate & Save Deck 💾
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: STUDY / FLIP CARD VIEW -->
+    <section id="tab-study" class="hidden space-y-6 max-w-2xl mx-auto">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <button onclick="switchTab('dashboard')" class="text-sm text-indigo-600 hover:underline font-medium">← Back</button>
+          <span class="text-gray-300">|</span>
+          <h3 id="current-deck-title" class="text-sm font-semibold text-gray-700">Study Session</h3>
+        </div>
+        <!-- Voice Selector Dropdown -->
+        <div class="flex items-center space-x-2">
+          <label for="voiceSelect" class="text-xs font-medium text-gray-500">Voice:</label>
+          <select id="voiceSelect" class="text-xs bg-white border border-border rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-600">
+            <option value="">Default Voice</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <h2 id="deck-progress" class="text-sm font-medium text-gray-500">Card 1 of 10</h2>
+      </div>
+
+      <!-- 3D Flippable Card Box -->
+      <div class="perspective-1000 w-full min-h-[300px] cursor-pointer" onclick="flipCard()">
+        <div id="card-inner" class="relative w-full h-[300px] duration-500 transform-style-3d shadow-sm rounded-xl">
+          
+          <!-- Front Side (Question) -->
+          <div class="absolute inset-0 w-full h-full bg-white border border-border rounded-xl p-8 flex flex-col justify-between backface-hidden shadow-xs">
+            <div class="flex justify-between items-center">
+              <span class="text-xs uppercase tracking-wider text-indigo-600 font-bold">Question</span>
+              <div class="flex items-center space-x-2">
+                <button onclick="event.stopPropagation(); speakText('card-question')" class="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-2.5 py-1 rounded border border-indigo-200 font-medium transition-all" title="Read Aloud">
+                  Listen 🔊
+                </button>
+                <span class="text-xs text-gray-400 font-medium bg-gray-50 px-2 py-1 rounded border border-gray-100">Click to flip 🔄</span>
+              </div>
+            </div>
+            <p id="card-question" class="text-lg font-medium text-gray-900 my-auto text-center"></p>
+            <div class="text-center text-xs text-indigo-600 font-medium">Click anywhere to reveal answer 👇</div>
+          </div>
+
+          <!-- Back Side (Answer) -->
+          <div class="absolute inset-0 w-full h-full bg-white border border-border rounded-xl p-8 flex flex-col justify-between backface-hidden rotate-y-180 shadow-xs">
+            <div class="flex justify-between items-center">
+              <span class="text-xs uppercase tracking-wider text-emerald-600 font-bold">Answer</span>
+              <div class="flex items-center space-x-2">
+                <button onclick="event.stopPropagation(); speakText('card-answer')" class="text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1 rounded border border-emerald-200 font-medium transition-all" title="Read Aloud">
+                  Listen 🔊
+                </button>
+                <button onclick="event.stopPropagation(); openAiExplanation()" class="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-2.5 py-1 rounded border border-indigo-200 font-medium transition-all" title="AI Deep Dive">
+                  Explain More 🧠
+                </button>
+                <span class="text-xs text-gray-400 font-medium bg-gray-50 px-2 py-1 rounded border border-gray-100">Flipped ⚡</span>
+              </div>
+            </div>
+            <p id="card-answer" class="text-md text-gray-700 my-auto text-center"></p>
+            <div class="text-center text-xs text-emerald-600 font-medium">Rate your recall below 👇</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SRS Rating Buttons (Disabled until flipped) -->
+      <div id="srs-actions" class="grid grid-cols-3 gap-3 opacity-40 pointer-events-none transition-all">
+        <button onclick="event.stopPropagation(); submitReview('hard')" class="srs-btn bg-white border border-border hover:bg-red-50 hover:border-red-200 text-red-700 font-medium py-3 rounded-lg text-sm transition-all shadow-xs">
+          Hard 🔴
+        </button>
+        <button onclick="event.stopPropagation(); submitReview('good')" class="srs-btn bg-white border border-border hover:bg-amber-50 hover:border-amber-200 text-amber-700 font-medium py-3 rounded-lg text-sm transition-all shadow-xs">
+          Good 🟡
+        </button>
+        <button onclick="event.stopPropagation(); submitReview('easy')" class="srs-btn bg-white border border-border hover:bg-emerald-50 hover:border-emerald-200 text-emerald-700 font-medium py-3 rounded-lg text-sm transition-all shadow-xs">
+          Easy 🟢
+        </button>
+      </div>
+
+      <!-- Feedback Toast -->
+      <div id="feedback-toast" class="hidden text-center text-sm font-semibold text-emerald-600 py-1">
+        Saved! ✓ Advancing...
+      </div>
+    </section>
+
+  </main>
+
+  <!-- AI Explanation & Interactive Chat Modal Popup -->
+  <div id="aiModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white border border-border rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-border pb-3">
+        <h3 class="font-bold text-indigo-600 flex items-center space-x-2">
+          <span>🧠 NVIDIA Nemotron AI Tutor</span>
+        </h3>
+        <button onclick="closeAiModal()" class="text-gray-400 hover:text-gray-700 font-bold text-sm">✕</button>
+      </div>
+      
+      <!-- Explanation & Chat History Box -->
+      <div id="aiModalContent" class="text-sm text-gray-700 leading-relaxed max-h-[250px] overflow-y-auto space-y-3 p-2">
+        <span class="text-gray-400 animate-pulse">Generating deep-dive explanation with Nebius Token Factory...</span>
+      </div>
+
+      <!-- Interactive Follow-up Question Input -->
+      <div class="flex items-center space-x-2 pt-2 border-t border-border">
+        <input type="text" id="tutorQueryInput" onkeydown="if(event.key==='Enter') askTutorFollowUp()" placeholder="Ask a follow-up question..." class="flex-1 rounded-lg border border-border p-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-600">
+        <button onclick="askTutorFollowUp()" id="tutorSendBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs px-3 py-2 rounded-lg transition-all">Ask 💬</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="w-full text-center py-6 text-xs text-gray-400 border-t border-border bg-white">
+    Synapse AI &bull; Powered by Nebius Studio & Supabase
+  </footer>
+
+  <!-- App Controller Script -->
+  <script>
+    let savedDecks = JSON.parse(localStorage.getItem('synapse_decks') || '[]');
+    let currentDeckIndex = null;
+    let currentDeckCards = [];
+    let currentIndex = 0;
+    let isFlipped = false;
+    let totalReviewsCount = parseInt(localStorage.getItem('synapse_reviews') || '0');
+    let availableVoices = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateDashboardStats();
+      renderSavedDecksList();
+      loadVoices();
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+      }
+    });
+
+    function formatMarkdown(text) {
+      if (!text) return '';
+      return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>');
+    }
+
+    function loadVoices() {
+      if (!('speechSynthesis' in window)) return;
+      availableVoices = window.speechSynthesis.getVoices();
+      const select = document.getElementById('voiceSelect');
+      if (!select) return;
+
+      select.innerHTML = '<option value="">Default Voice</option>';
+
+      availableVoices.forEach((voice, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        let genderHint = '';
+        const nameLower = voice.name.toLowerCase();
+        if (nameLower.includes('male') || nameLower.includes('david') || nameLower.includes('george') || nameLower.includes('daniel') || nameLower.includes('oliver') || nameLower.includes('ryan')) {
+          genderHint = ' (Male)';
+        } else if (nameLower.includes('female') || nameLower.includes('zira') || nameLower.includes('sara') || nameLower.includes('jenna') || nameLower.includes('victoria') || nameLower.includes('karen')) {
+          genderHint = ' (Female)';
         }
-    </script>
+        option.textContent = `${voice.name} [${voice.lang}]${genderHint}`;
+        select.appendChild(option);
+      });
+    }
+
+    function safeSetText(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    }
+
+    function stopSpeech() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function speakText(elementId) {
+      if (!('speechSynthesis' in window)) {
+        alert('Text-to-speech is not supported in your browser.');
+        return;
+      }
+      stopSpeech();
+      const el = document.getElementById(elementId);
+      if (el && el.textContent) {
+        const utterance = new SpeechSynthesisUtterance(el.textContent);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+
+        const voiceSelect = document.getElementById('voiceSelect');
+        if (voiceSelect && voiceSelect.value !== '') {
+          const selectedVoice = availableVoices[parseInt(voiceSelect.value)];
+          if (selectedVoice) {
+            utterance.voice = selectedVoice;
+          }
+        }
+
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    async function openAiExplanation() {
+      const card = currentDeckCards[currentIndex];
+      const modal = document.getElementById('aiModal');
+      const content = document.getElementById('aiModalContent');
+      
+      modal.classList.remove('hidden');
+      content.innerHTML = `<div class="p-2 bg-indigo-50 text-indigo-800 rounded-lg"><span class="animate-pulse">🧠 Nemotron AI is analyzing "${card.question}"...</span></div>`;
+
+      try {
+        const res = await fetch('/api/explain', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: card.question, answer: card.answer })
+        });
+        
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Server status ${res.status}: ${errText.slice(0, 100)}`);
+        }
+
+        const data = await res.json();
+        content.innerHTML = `
+          <div class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-lg">
+            <p class="font-semibold text-xs text-indigo-900 mb-1">Deep Dive & Analogy:</p>
+            <p>${formatMarkdown(data.explanation)}</p>
+          </div>
+        `;
+      } catch (err) {
+        content.innerHTML = `
+          <div class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-lg space-y-2">
+            <p class="font-semibold text-xs text-indigo-900">Deep Dive & Analogy:</p>
+            <p><strong>Concept:</strong> ${card.question}</p>
+            <p><strong>Key Insight:</strong> ${card.answer}</p>
+          </div>
+        `;
+      }
+    }
+
+    async function askTutorFollowUp() {
+      const input = document.getElementById('tutorQueryInput');
+      const content = document.getElementById('aiModalContent');
+      const query = input.value.trim();
+      if (!query) return;
+
+      const card = currentDeckCards[currentIndex];
+      input.value = '';
+
+      content.innerHTML += `
+        <div class="p-3 bg-gray-100 rounded-lg text-right">
+          <p class="font-semibold text-xs text-gray-600 mb-1">You:</p>
+          <p>${query}</p>
+        </div>
+      `;
+
+      const loadingId = 'loading-' + Date.now();
+      content.innerHTML += `
+        <div id="${loadingId}" class="p-3 bg-indigo-50 rounded-lg">
+          <p class="font-semibold text-xs text-indigo-900 mb-1">Nemotron AI Tutor:</p>
+          <p class="animate-pulse text-indigo-600">Thinking deeper...</p>
+        </div>
+      `;
+      content.scrollTop = content.scrollHeight;
+
+      try {
+        const res = await fetch('/api/explain', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: card.question, answer: card.answer, userQuery: query })
+        });
+        
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Server status ${res.status}: ${errText.slice(0, 100)}`);
+        }
+
+        const data = await res.json();
+        document.getElementById(loadingId).remove();
+        content.innerHTML += `
+          <div class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-lg">
+            <p class="font-semibold text-xs text-indigo-900 mb-1">Nemotron AI Tutor:</p>
+            <p>${formatMarkdown(data.explanation)}</p>
+          </div>
+        `;
+        content.scrollTop = content.scrollHeight;
+      } catch (err) {
+        document.getElementById(loadingId).remove();
+        content.innerHTML += `<div class="p-3 bg-red-50 text-red-700 rounded-lg">Error: ${err.message}</div>`;
+      }
+    }
+
+    function closeAiModal() {
+      document.getElementById('aiModal').classList.add('hidden');
+    }
+
+    function startSmartReview() {
+      if (savedDecks.length === 0) {
+        alert('No saved decks available for review.');
+        return;
+      }
+      // Gather all cards marked as "hard" or unreviewed across all decks
+      let dueCards = [];
+      savedDecks.forEach(deck => {
+        deck.cards.forEach(card => {
+          if ((card.repetition_level || 0) < 2) {
+            dueCards.push(card);
+          }
+        });
+      });
+
+      if (dueCards.length === 0) {
+        // Fallback to all cards if none are strictly due
+        dueCards = savedDecks[0].cards;
+        alert('All cards are mastered! Starting general review session.');
+      } else {
+        alert(`Found ${dueCards.length} cards needing review based on your Spaced Repetition score!`);
+      }
+
+      currentDeckIndex = null;
+      currentDeckCards = dueCards;
+      currentIndex = 0;
+      safeSetText('current-deck-title', 'Smart Review (Due Cards 🔥)');
+      switchTab('study');
+      renderCard();
+    }
+
+    function switchTab(tabName) {
+      stopSpeech();
+      closeAiModal();
+      const tabDashboard = document.getElementById('tab-dashboard');
+      const tabGenerator = document.getElementById('tab-generator');
+      const tabStudy = document.getElementById('tab-study');
+      const navDashboard = document.getElementById('nav-dashboard');
+      const navGenerator = document.getElementById('nav-generator');
+
+      if (tabDashboard) tabDashboard.classList.add('hidden');
+      if (tabGenerator) tabGenerator.classList.add('hidden');
+      if (tabStudy) tabStudy.classList.add('hidden');
+
+      if (navDashboard) navDashboard.className = 'px-4 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-all';
+      if (navGenerator) navGenerator.className = 'px-4 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-all';
+
+      if (tabName === 'dashboard') {
+        if (tabDashboard) tabDashboard.classList.remove('hidden');
+        if (navDashboard) navDashboard.className = 'px-4 py-2 text-sm font-medium rounded-lg bg-indigo-50 text-indigo-700 transition-all';
+        updateDashboardStats();
+        renderSavedDecksList();
+      } else if (tabName === 'generator') {
+        if (tabGenerator) tabGenerator.classList.remove('hidden');
+        if (navGenerator) navGenerator.className = 'px-4 py-2 text-sm font-medium rounded-lg bg-indigo-50 text-indigo-700 transition-all';
+      } else if (tabName === 'study') {
+        if (tabStudy) tabStudy.classList.remove('hidden');
+      }
+    }
+
+    async function handleGenerateAndSave() {
+      const titleInput = document.getElementById('deckTitle');
+      const contentInput = document.getElementById('lectureContent');
+      const pdfInput = document.getElementById('pdfFile');
+      const searchInput = document.getElementById('enableSearch');
+      const countInput = document.getElementById('cardCount');
+      const btn = document.getElementById('generateBtn');
+
+      const customTitle = titleInput ? titleInput.value.trim() : '';
+      const lectureContent = contentInput ? contentInput.value.trim() : '';
+      const pdfFile = pdfInput ? pdfInput.files[0] : null;
+      const enableSearch = searchInput ? searchInput.checked : false;
+      const cardCount = countInput ? countInput.value : '10';
+
+      if (!customTitle) {
+        alert('Please provide a name/title for your deck.');
+        if (titleInput) titleInput.focus();
+        return;
+      }
+
+      if (!lectureContent && !pdfFile) {
+        alert('Please enter lecture notes or upload a PDF file.');
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Generating & Saving... 💾';
+      }
+
+      try {
+        let res;
+        if (pdfFile) {
+          const formData = new FormData();
+          formData.append('pdfFile', pdfFile);
+          formData.append('enableSearch', enableSearch);
+          formData.append('cardCount', cardCount);
+          res = await fetch('/api/upload-pdf', { method: 'POST', body: formData });
+        } else {
+          res = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lectureContent, enableSearch, cardCount })
+          });
+        }
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Generation failed');
+
+        const sourceInfo = pdfFile ? `PDF File: ${pdfFile.name}` : `Notes: ${lectureContent.slice(0, 40)}...`;
+
+        const newDeck = {
+          id: Date.now(),
+          title: customTitle,
+          sourceType: pdfFile ? 'PDF Upload' : 'Lecture Notes',
+          sourceDetail: sourceInfo,
+          date: new Date().toLocaleDateString(),
+          cards: data.flashcards,
+          goodEasyReviews: 0,
+          totalReviews: 0
+        };
+
+        savedDecks.unshift(newDeck);
+        localStorage.setItem('synapse_decks', JSON.stringify(savedDecks));
+
+        if (titleInput) titleInput.value = '';
+        if (contentInput) contentInput.value = '';
+        if (pdfInput) pdfInput.value = '';
+
+        startStudySession(0);
+      } catch (err) {
+        alert('Error: ' + err.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Generate & Save Deck 💾';
+        }
+      }
+    }
+
+    function startStudySession(index) {
+      stopSpeech();
+      currentDeckIndex = index;
+      const deck = savedDecks[index];
+      currentDeckCards = deck.cards;
+      currentIndex = 0;
+      safeSetText('current-deck-title', deck.title);
+      switchTab('study');
+      renderCard();
+    }
+
+    function renderCard() {
+      stopSpeech();
+      if (currentIndex >= currentDeckCards.length) {
+        const tabStudy = document.getElementById('tab-study');
+        if (tabStudy) {
+          tabStudy.innerHTML = `
+            <div class="bg-white border border-border rounded-xl shadow-xs p-8 text-center space-y-4 max-w-lg mx-auto">
+              <h2 class="text-xl font-bold text-emerald-600">🎉 Deck Completed!</h2>
+              <p class="text-sm text-gray-500">Great job! You have successfully reviewed all cards in this session.</p>
+              <button onclick="switchTab('dashboard')" class="bg-indigo-600 text-white font-medium px-5 py-2.5 rounded-lg text-sm shadow-sm">Return to Dashboard</button>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      const card = currentDeckCards[currentIndex];
+      isFlipped = false;
+      safeSetText('deck-progress', `Card ${currentIndex + 1} of ${currentDeckCards.length}`);
+      safeSetText('card-question', card.question);
+      safeSetText('card-answer', card.answer);
+
+      const cardInner = document.getElementById('card-inner');
+      if (cardInner) cardInner.style.transform = 'rotateY(0deg)';
+
+      const srsActions = document.getElementById('srs-actions');
+      if (srsActions) srsActions.classList.add('opacity-40', 'pointer-events-none');
+      
+      const toast = document.getElementById('feedback-toast');
+      if (toast) toast.classList.add('hidden');
+    }
+
+    function flipCard() {
+      stopSpeech();
+      isFlipped = !isFlipped;
+      const cardInner = document.getElementById('card-inner');
+      const srsActions = document.getElementById('srs-actions');
+
+      if (isFlipped) {
+        if (cardInner) cardInner.style.transform = 'rotateY(180deg)';
+        if (srsActions) srsActions.classList.remove('opacity-40', 'pointer-events-none');
+      } else {
+        if (cardInner) cardInner.style.transform = 'rotateY(0deg)';
+        if (srsActions) srsActions.classList.add('opacity-40', 'pointer-events-none');
+      }
+    }
+
+    async function submitReview(rating) {
+      stopSpeech();
+      const card = currentDeckCards[currentIndex];
+      const srsActions = document.getElementById('srs-actions');
+      if (srsActions) srsActions.classList.add('opacity-40', 'pointer-events-none');
+
+      const toast = document.getElementById('feedback-toast');
+      if (toast) toast.classList.remove('hidden');
+
+      totalReviewsCount++;
+      localStorage.setItem('synapse_reviews', totalReviewsCount);
+
+      if (currentDeckIndex !== null && savedDecks[currentDeckIndex]) {
+        savedDecks[currentDeckIndex].totalReviews = (savedDecks[currentDeckIndex].totalReviews || 0) + 1;
+        if (rating === 'good' || rating === 'easy') {
+          savedDecks[currentDeckIndex].goodEasyReviews = (savedDecks[currentDeckIndex].goodEasyReviews || 0) + 1;
+          card.repetition_level = (card.repetition_level || 0) + 1;
+        } else {
+          card.repetition_level = 0;
+        }
+        localStorage.setItem('synapse_decks', JSON.stringify(savedDecks));
+      }
+
+      try {
+        await fetch('/api/review-card', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cardId: card.id, rating })
+        });
+      } catch (err) {
+        console.error('Failed to sync review with Supabase:', err);
+      }
+
+      setTimeout(() => {
+        currentIndex++;
+        renderCard();
+      }, 700);
+    }
+
+    function updateDashboardStats() {
+      safeSetText('stat-decks', savedDecks.length);
+      safeSetText('stat-reviews', totalReviewsCount);
+
+      let totalGoodEasy = 0;
+      let totalAll = 0;
+      savedDecks.forEach(d => {
+        totalGoodEasy += (d.goodEasyReviews || 0);
+        totalAll += (d.totalReviews || 0);
+      });
+
+      const avgConfidence = totalAll > 0 ? Math.round((totalGoodEasy / totalAll) * 100) : 0;
+      safeSetText('stat-confidence', avgConfidence + '%');
+    }
+
+    function renderSavedDecksList() {
+      const container = document.getElementById('saved-decks-list');
+      if (!container) return;
+
+      if (savedDecks.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-sm text-gray-400 border border-dashed border-border rounded-lg">
+            No decks generated yet. Click "+ New Deck" to get started!
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = savedDecks.map((deck, idx) => {
+        const tRev = deck.totalReviews || 0;
+        const gRev = deck.goodEasyReviews || 0;
+        const deckConf = tRev > 0 ? Math.round((gRev / tRev) * 100) : 0;
+
+        return `
+          <div class="flex items-center justify-between p-4 border border-border rounded-lg hover:border-indigo-200 transition-all bg-white">
+            <div class="space-y-1 pr-4">
+              <div class="flex items-center space-x-2">
+                <h4 class="font-semibold text-sm text-gray-900">${deck.title}</h4>
+                <span class="text-[10px] bg-indigo-50 text-indigo-700 font-semibold px-2 py-0.5 rounded border border-indigo-100">${deck.sourceType}</span>
+                <span class="text-[10px] bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded border border-emerald-100">Confidence: ${deckConf}%</span>
+              </div>
+              <p class="text-xs text-gray-500">${deck.sourceDetail}</p>
+              <p class="text-[11px] text-gray-400">${deck.cards.length} Flashcards &bull; Created ${deck.date}</p>
+            </div>
+            <div class="flex items-center space-x-2 shrink-0">
+              <button onclick="startStudySession(${idx})" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium text-xs px-3 py-2 rounded-lg transition-all">
+                Study ⚡
+              </button>
+              <button onclick="deleteDeck(${idx})" class="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all" title="Delete Deck">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function deleteDeck(index) {
+      if (confirm('Are you sure you want to delete this deck?')) {
+        savedDecks.splice(index, 1);
+        localStorage.setItem('synapse_decks', JSON.stringify(savedDecks));
+        updateDashboardStats();
+        renderSavedDecksList();
+      }
+    }
+  </script>
 </body>
 </html>
