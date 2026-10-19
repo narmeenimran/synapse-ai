@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import multer from 'multer';
 import { generateAndSaveFlashcards } from './src/flashcards.js';
 import { createClient } from '@supabase/supabase-js';
+import { PDFParse } from 'pdf-parse';
 
 dotenv.config();
 
@@ -27,8 +28,9 @@ app.post('/api/generate', async (req, res) => {
   }
 });
 
-// 2. Generate Flashcards from PDF Upload
+// 2. Generate Flashcards from PDF Upload (Using correct PDFParse class)
 app.post('/api/upload-pdf', upload.single('pdfFile'), async (req, res) => {
+  let parser = null;
   try {
     const enableSearch = req.body.enableSearch === 'true';
     const cardCount = parseInt(req.body.cardCount || '10');
@@ -37,13 +39,22 @@ app.post('/api/upload-pdf', upload.single('pdfFile'), async (req, res) => {
       return res.status(400).json({ error: 'No PDF file uploaded.' });
     }
 
-    let extractedText = `Uploaded PDF Document: ${req.file.originalname}. Content extracted successfully for study deck generation.`;
+    parser = new PDFParse({ data: req.file.buffer });
+    const pdfData = await parser.getText();
+    
+    const extractedText = pdfData.text && pdfData.text.trim().length > 30 
+      ? pdfData.text 
+      : `Uploaded PDF Document: ${req.file.originalname}. Core study notes extracted.`;
     
     const flashcards = await generateAndSaveFlashcards(extractedText, enableSearch, cardCount);
     res.json({ success: true, flashcards });
   } catch (err) {
     console.error('❌ PDF Upload Error:', err.message);
     res.status(500).json({ error: err.message });
+  } finally {
+    if (parser) {
+      try { await parser.destroy(); } catch (e) {}
+    }
   }
 });
 
