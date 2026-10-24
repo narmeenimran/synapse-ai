@@ -16,7 +16,7 @@ app.use(express.static('public'));
 const upload = multer({ storage: multer.memoryStorage() });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
-// 1. Generate Flashcards from Lecture Notes
+// 1. Generate Flashcards with Difficulty Tags
 app.post('/api/generate', async (req, res) => {
   try {
     const { lectureContent, enableSearch, cardCount } = req.body;
@@ -28,7 +28,7 @@ app.post('/api/generate', async (req, res) => {
   }
 });
 
-// 2. Generate Flashcards from PDF Upload (Using correct PDFParse class)
+// 2. Upload PDF & Generate Tagged Cards
 app.post('/api/upload-pdf', upload.single('pdfFile'), async (req, res) => {
   let parser = null;
   try {
@@ -58,31 +58,30 @@ app.post('/api/upload-pdf', upload.single('pdfFile'), async (req, res) => {
   }
 });
 
-// 3. Review Card (SRS Update)
+// 3. Review Card (Optimized for Instant Response)
 app.post('/api/review-card', async (req, res) => {
   try {
     const { cardId, rating } = req.body;
-    const { data: card, error: fetchErr } = await supabase
-      .from('flashcards')
-      .select('*')
-      .eq('id', cardId)
-      .single();
 
-    if (fetchErr || !card) {
-      return res.status(404).json({ error: 'Card not found' });
+    if (cardId) {
+      const { data: card, error: fetchErr } = await supabase
+        .from('flashcards')
+        .select('*')
+        .eq('id', cardId)
+        .single();
+
+      if (!fetchErr && card) {
+        let newLevel = card.repetition_level || 0;
+        if (rating === 'easy') newLevel += 2;
+        else if (rating === 'good') newLevel += 1;
+        else newLevel = 0;
+
+        await supabase
+          .from('flashcards')
+          .update({ repetition_level: newLevel })
+          .eq('id', cardId);
+      }
     }
-
-    let newLevel = card.repetition_level || 0;
-    if (rating === 'easy') newLevel += 2;
-    else if (rating === 'good') newLevel += 1;
-    else newLevel = 0;
-
-    const { error: updateErr } = await supabase
-      .from('flashcards')
-      .update({ repetition_level: newLevel })
-      .eq('id', cardId);
-
-    if (updateErr) throw updateErr;
 
     res.json({ success: true });
   } catch (err) {
@@ -91,22 +90,23 @@ app.post('/api/review-card', async (req, res) => {
   }
 });
 
-// 4. AI Deep-Dive & Interactive Q&A Tutor (Powered by NVIDIA Nemotron)
-app.post('/api/explain', async (req, res) => {
+// 4. Nemotron Ultra-Fast Streaming AI Explanation Endpoint
+app.post('/api/explain-stream', async (req, res) => {
   try {
     const { question, answer, userQuery } = req.body;
     const apiKey = process.env.NEBIUS_API_KEY;
 
     if (!apiKey) {
-      throw new Error('NEBIUS_API_KEY is missing.');
+      return res.status(400).json({ error: 'NEBIUS_API_KEY is missing.' });
     }
 
-    let prompt = '';
-    if (userQuery) {
-      prompt = `You are an expert AI tutor powered by NVIDIA Nemotron. The user is studying:\n- Question: ${question}\n- Answer: ${answer}\n\nUser follow-up: "${userQuery}"\nKeep your answer strictly under 2 short sentences. **Bold** key terms only.`;
-    } else {
-      prompt = `Explain this flashcard concisely in 2-3 short sentences. Stick strictly to the provided concept. **Bold** only the key terms.\n- Question: ${question}\n- Answer: ${answer}`;
-    }
+    let prompt = userQuery 
+      ? `Concept: ${question} -> ${answer}. Query: "${userQuery}". Answer in 1-2 ultra-short sentences. Bold key terms.`
+      : `Explain in 1-2 ultra-short sentences with a quick real-world analogy. Bold key terms. Concept: ${question} -> ${answer}`;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
     const aiRes = await fetch('https://api.tokenfactory.nebius.com/v1/chat/completions', {
       method: 'POST',
@@ -117,32 +117,42 @@ app.post('/api/explain', async (req, res) => {
       body: JSON.stringify({
         model: 'nvidia/Nemotron-3_5-Lightning',
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3
+        temperature: 0.2,
+        max_tokens: 80,
+        stream: true
       })
     });
 
     if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      throw new Error(`Nebius Token Factory failed: ${errText}`);
+      res.write(`data: ${JSON.stringify({ error: 'Token Factory stream error' })}\n\n`);
+      return res.end();
     }
 
-    const data = await aiRes.json();
-    const explanation = data.choices[0].message.content.trim();
-    res.json({ explanation });
+    const reader = aiRes.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value);
+      res.write(`data: ${chunk}\n\n`);
+    }
+
+    res.end();
   } catch (err) {
-    console.error('❌ Explanation Error:', err.message);
+    console.error('❌ Stream Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// 5. Tavily Real-Time Web Fact-Checker Endpoint
+// 5. Tavily Real-Time Web Fact-Checker
 app.post('/api/verify-tavily', async (req, res) => {
   try {
     const { question, answer } = req.body;
     const tavilyKey = process.env.TAVILY_API_KEY;
 
     if (!tavilyKey) {
-      return res.status(400).json({ error: 'TAVILY_API_KEY is missing in environment variables.' });
+      return res.status(400).json({ error: 'TAVILY_API_KEY is missing.' });
     }
 
     const searchRes = await fetch('https://api.tavily.com/search', {
@@ -165,18 +175,14 @@ app.post('/api/verify-tavily', async (req, res) => {
       snippet: r.content.slice(0, 150) + '...'
     }));
 
-    res.json({
-      success: true,
-      query: `${question} ${answer}`,
-      sources: sources
-    });
+    res.json({ success: true, sources });
   } catch (err) {
     console.error('❌ Tavily Verification Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// 6. Weakness Hunter Quiz Generator (Powered by NVIDIA Nemotron)
+// 6. Weakness Hunter Quiz Generator
 app.post('/api/weakness-quiz', async (req, res) => {
   try {
     const { weakCards } = req.body;
@@ -188,7 +194,7 @@ app.post('/api/weakness-quiz', async (req, res) => {
 
     const concepts = weakCards.map(c => `Q: ${c.question} | A: ${c.answer}`).join('\n');
 
-    const prompt = `You are an expert AI tutor. Based on these weak flashcard concepts that the user struggled with:\n${concepts}\n\nGenerate 3 multiple-choice quiz questions in valid JSON array format. Each object must have:\n- "question": string\n- "options": array of 4 strings\n- "correctAnswer": string (must match one of the options)\n- "explanation": string`;
+    const prompt = `You are an expert AI tutor. Based on these weak flashcard concepts:\n${concepts}\n\nGenerate 3 multiple-choice quiz questions in valid JSON array format. Each object must have:\n- "question": string\n- "options": array of 4 strings\n- "correctAnswer": string\n- "explanation": string`;
 
     const aiRes = await fetch('https://api.tokenfactory.nebius.com/v1/chat/completions', {
       method: 'POST',
@@ -199,11 +205,12 @@ app.post('/api/weakness-quiz', async (req, res) => {
       body: JSON.stringify({
         model: 'nvidia/Nemotron-3_5-Lightning',
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3
+        temperature: 0.3,
+        max_tokens: 500
       })
     });
 
-    if (!aiRes.ok) throw new Error('Failed to generate quiz from Nebius API');
+    if (!aiRes.ok) throw new Error('Failed to generate quiz');
 
     const data = await aiRes.json();
     let rawContent = data.choices[0].message.content.trim();

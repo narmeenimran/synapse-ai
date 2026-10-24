@@ -3,286 +3,517 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Synapse AI - Spaced Repetition Platform</title>
+  <title>Synapse AI - Personalized Study App</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti CDN for Gamification Celebration -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
   <script>
     tailwind.config = {
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['"Inter"', 'sans-serif'],
+          },
           colors: {
-            border: '#e5e5e5',
-            background: '#fafafa',
-            foreground: '#171717',
+            border: '#e2e8f0',
+            background: '#f8fafc',
+            foreground: '#0f172a',
           }
         }
       }
     }
   </script>
   <style>
+    body { font-family: 'Inter', sans-serif; }
     .perspective-1000 { perspective: 1000px; }
     .transform-style-3d { transform-style: preserve-3d; }
     .backface-hidden { backface-visibility: hidden; }
     .rotate-y-180 { transform: rotateY(180deg); }
   </style>
 </head>
-<body class="bg-background text-foreground min-h-screen flex flex-col justify-between font-sans antialiased selection:bg-neutral-200">
+<body class="bg-background text-foreground min-h-screen flex flex-col justify-between antialiased selection:bg-teal-100 selection:text-teal-900">
 
-  <!-- Top Navigation Bar -->
-  <header class="w-full border-b border-border bg-white/90 backdrop-blur-md sticky top-0 px-6 py-3.5 flex items-center justify-between z-40">
-    <div class="flex items-center space-x-3">
-      <div class="bg-neutral-900 text-white p-1.5 rounded-md font-bold text-sm flex items-center justify-center w-8 h-8">⚡</div>
-      <div>
-        <h1 class="text-sm font-bold tracking-tight text-neutral-900">Synapse AI</h1>
-        <p class="text-[10px] text-neutral-400 font-medium">Nebius x NVIDIA 2026 Hackathon</p>
+  <!-- FLOATING CUSTOM APP TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- ONBOARDING PAGE -->
+  <div id="auth-page" class="fixed inset-0 bg-[#f8fafc] z-50 flex flex-col justify-between">
+    <header class="w-full px-8 py-5 flex items-center justify-between border-b border-slate-200/80 bg-white">
+      <div class="flex items-center space-x-3">
+        <div class="bg-teal-600 text-white p-2 rounded-xl font-bold text-lg flex items-center justify-center w-9 h-9 shadow-xs">⚡</div>
+        <span class="text-xl font-extrabold text-teal-600 tracking-tight">Synapse AI</span>
       </div>
-    </div>
-    <nav class="flex space-x-1 bg-neutral-100 p-1 rounded-lg border border-neutral-200">
-      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-3.5 py-1 text-xs font-semibold rounded-md bg-white text-neutral-900 shadow-2xs transition-all">Dashboard</button>
-      <button onclick="switchTab('generator')" id="nav-generator" class="px-3.5 py-1 text-xs font-medium rounded-md text-neutral-500 hover:text-neutral-900 transition-all">+ New Deck</button>
-    </nav>
-  </header>
+      <button onclick="handleSignOut()" class="text-xs font-semibold text-red-500 bg-red-50 hover:bg-red-100 border border-red-100 px-4 py-1.5 rounded-full transition-all">Log out</button>
+    </header>
 
-  <!-- Main Content Area -->
-  <main class="w-full max-w-4xl mx-auto p-4 sm:p-6 my-8 flex-1">
-
-    <!-- TAB 1: DASHBOARD & SAVED DECKS -->
-    <section id="tab-dashboard" class="space-y-6">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 class="text-xl font-bold tracking-tight text-neutral-900">Your Study Activity</h2>
-          <p class="text-xs text-neutral-500 mt-0.5">Manage your saved decks, track confidence scores, and review anytime.</p>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="startSmartReview()" class="bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium px-3.5 py-2 rounded-lg transition-all shadow-2xs flex items-center space-x-1.5">
-            <span>Review Due</span> <span>🔥</span>
-          </button>
-          <button onclick="startWeaknessQuiz()" class="bg-neutral-200 hover:bg-neutral-300 text-neutral-900 text-xs font-medium px-3.5 py-2 rounded-lg transition-all flex items-center space-x-1.5">
-            <span>Weakness Quiz</span> <span>🎯</span>
-          </button>
-          <button onclick="switchTab('generator')" class="bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium px-3.5 py-2 rounded-lg transition-all shadow-2xs flex items-center space-x-1.5">
-            <span>Create Deck</span> <span>🚀</span>
-          </button>
-        </div>
+    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 max-w-7xl w-full mx-auto my-auto items-center">
+      <div class="p-8 md:p-16 space-y-4">
+        <span class="text-[11px] font-extrabold uppercase tracking-widest text-teal-600">Account Set Up</span>
+        <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">Just a few questions</h1>
+        <p class="text-sm text-slate-500 max-w-md leading-relaxed">Your answers help us set up the right AI study tools and recommendations from day one. Just a few quick details.</p>
       </div>
 
-      <!-- Stats Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white border border-border rounded-xl p-5 shadow-2xs">
-          <p class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Total Saved Decks</p>
-          <p id="stat-decks" class="text-2xl font-extrabold mt-1 text-neutral-900">0</p>
-        </div>
-        <div class="bg-white border border-border rounded-xl p-5 shadow-2xs">
-          <p class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Flashcards Reviewed</p>
-          <p id="stat-reviews" class="text-2xl font-extrabold mt-1 text-neutral-900">0</p>
-        </div>
-        <div class="bg-white border border-border rounded-xl p-5 shadow-xs">
-          <p class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Average Confidence</p>
-          <p id="stat-confidence" class="text-2xl font-extrabold mt-1 text-neutral-900">0%</p>
-        </div>
-      </div>
-
-      <!-- Saved Decks List -->
-      <div class="bg-white border border-border rounded-xl p-6 shadow-2xs space-y-4">
-        <h3 class="font-bold text-xs text-neutral-900 uppercase tracking-wider">Saved Study Decks</h3>
-        <div id="saved-decks-list" class="space-y-3">
-          <div class="text-center py-12 text-xs text-neutral-400 border border-dashed border-border rounded-lg">
-            No decks generated yet. Click "+ New Deck" to get started!
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 2: GENERATOR & SAVE VIEW WITH MODE SELECTOR -->
-    <section id="tab-generator" class="hidden space-y-6 max-w-2xl mx-auto">
-      <div class="bg-white border border-border rounded-xl shadow-2xs p-6 sm:p-8 space-y-6">
-        <div>
-          <h2 class="text-lg font-bold text-neutral-900">Create Study Deck</h2>
-          <p class="text-xs text-neutral-500 mt-0.5">How would you like to build your deck today?</p>
-        </div>
-
-        <!-- Creation Mode Selector Prompt -->
-        <div class="grid grid-cols-2 gap-2 p-1 bg-neutral-100 rounded-lg border border-border">
-          <button onclick="setCreationMode('upload')" id="mode-btn-upload" class="py-2 text-xs font-semibold rounded-md bg-white text-neutral-900 shadow-2xs transition-all">📁 Upload PDF File</button>
-          <button onclick="setCreationMode('chat')" id="mode-btn-chat" class="py-2 text-xs font-medium rounded-md text-neutral-500 hover:text-neutral-900 transition-all">💬 Chat with AI / Notes</button>
-        </div>
-
-        <div class="space-y-4">
-          <div>
-            <label class="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5">Deck Title Name *</label>
-            <input type="text" id="deckTitle" class="w-full rounded-lg border border-border px-3 py-2 text-xs bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-all" placeholder="e.g. Chapter 1 Review">
+      <div class="p-8 md:p-16 flex flex-col justify-center items-center">
+        <div class="w-full max-w-sm space-y-6 bg-white p-8 rounded-2xl border border-slate-200/80 shadow-[0_4px_25px_rgba(0,0,0,0.03)]">
+          <div class="text-center space-y-1">
+            <h2 class="text-xl font-bold text-slate-900">Account Details</h2>
+            <p id="onboarding-email-display" class="text-xs text-slate-500">Creating account for <span class="font-medium text-slate-800" id="user-email-tag">user@domain.com</span></p>
           </div>
 
-          <!-- Dynamic Input Containers -->
-          <div id="input-container-upload" class="space-y-3">
-            <label class="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5">Upload PDF Document</label>
-            <input type="file" id="pdfFile" accept=".pdf" class="w-full text-xs text-neutral-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-neutral-100 file:text-neutral-800 hover:file:bg-neutral-200 cursor-pointer">
+          <div class="relative w-20 h-20 mx-auto text-center">
+            <div id="avatar-preview" class="w-20 h-20 rounded-full bg-teal-100 border-2 border-teal-500 flex items-center justify-center text-3xl shadow-xs overflow-hidden bg-cover bg-center">
+              <span id="avatar-emoji">👤</span>
+            </div>
+            <button onclick="openAvatarModal()" class="absolute bottom-0 right-0 bg-white border border-slate-200 p-1.5 rounded-full text-xs shadow-xs hover:bg-slate-50" title="Change Profile Picture">✏️</button>
           </div>
 
-          <div id="input-container-chat" class="hidden space-y-3">
-            <label class="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5">Talk / Paste Notes for AI to Learn From</label>
-            <textarea id="lectureContent" rows="4" class="w-full rounded-lg border border-border p-3 text-xs bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-all" placeholder="Describe the topic or paste lecture notes here..."></textarea>
-          </div>
+          <div class="space-y-4 text-left">
+            <div>
+              <label class="block text-xs font-semibold text-slate-800 mb-1">Full Name*</label>
+              <input type="text" id="setupFullName" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:bg-white transition-all" placeholder="Enter full name">
+            </div>
 
-          <div>
-            <label for="cardCount" class="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5">Number of Flashcards</label>
-            <select id="cardCount" class="w-full rounded-lg border border-border px-3 py-2 text-xs bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-all">
-              <option value="5">5 Cards</option>
-              <option value="10" selected>10 Cards</option>
-              <option value="15">15 Cards</option>
-              <option value="20">20 Cards</option>
-            </select>
-          </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-800 mb-1">Username*</label>
+              <input type="text" id="setupUsername" oninput="validateUsername()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:bg-white transition-all" placeholder="Choose a username">
+              <p id="username-error" class="hidden text-[11px] text-red-500 bg-red-50 p-2 rounded-lg mt-1 border border-red-100">⚠️ That username is taken, enter a different one</p>
+            </div>
 
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-            <label class="flex items-center space-x-2 text-xs font-medium text-neutral-600 cursor-pointer">
-              <input type="checkbox" id="enableSearch" class="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 w-3.5 h-3.5">
-              <span>Enable Tavily Web Search Context</span>
-            </label>
-            <button onclick="handleGenerateAndSave()" id="generateBtn" class="bg-neutral-900 hover:bg-neutral-800 text-white font-medium px-5 py-2 rounded-lg text-xs transition-all shadow-2xs">
-              Generate & Save Deck 💾
+            <div>
+              <label class="block text-xs font-semibold text-slate-800 mb-1">Birthday*</label>
+              <input type="text" id="setupBirthday" readonly onclick="openCalendarModal()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 cursor-pointer focus:outline-none focus:ring-1 focus:ring-teal-500 focus:bg-white transition-all" placeholder="MM/DD/YYYY">
+            </div>
+
+            <button onclick="executeAuthRedirect()" id="completeSetupBtn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-xl text-xs transition-all shadow-sm">
+              Next & Finish Setup →
             </button>
           </div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- TAB 3: STUDY / FLIP CARD VIEW -->
-    <section id="tab-study" class="hidden space-y-6 max-w-2xl mx-auto">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-          <button onclick="switchTab('dashboard')" class="text-xs text-neutral-900 hover:underline font-semibold">← Back</button>
-          <span class="text-neutral-300">|</span>
-          <h3 id="current-deck-title" class="text-xs font-bold text-neutral-600 uppercase tracking-wide">Study Session</h3>
-        </div>
-        <!-- Voice Selector Dropdown -->
-        <div class="flex items-center space-x-2">
-          <label for="voiceSelect" class="text-[10px] font-semibold text-neutral-400">Voice:</label>
-          <select id="voiceSelect" class="text-xs bg-white border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-neutral-900">
-            <option value="">Default Voice</option>
-          </select>
-        </div>
+    <footer class="w-full text-center py-4 text-xs text-slate-400 border-t border-slate-100 bg-white">
+      Synapse AI &bull; Powered by Supabase & Nebius Studio
+    </footer>
+  </div>
+
+  <!-- AVATAR SELECTION MODAL -->
+  <div id="avatarModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-2xs hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 text-center">
+      <h3 class="text-sm font-bold text-slate-900">Choose Profile Picture</h3>
+      <div class="grid grid-cols-4 gap-3">
+        <button onclick="selectEmojiAvatar('👤')" class="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-2xl">👤</button>
+        <button onclick="selectEmojiAvatar('🎓')" class="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-2xl">🎓</button>
+        <button onclick="selectEmojiAvatar('⚡')" class="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-2xl">⚡</button>
+        <button onclick="selectEmojiAvatar('🚀')" class="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-2xl">🚀</button>
       </div>
-
-      <div class="flex justify-between items-center">
-        <h2 id="deck-progress" class="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Card 1 of 10</h2>
+      <div class="relative border-t border-slate-100 pt-3">
+        <label class="block text-xs font-semibold text-slate-600 mb-2">Or Upload Image File</label>
+        <input type="file" id="avatarFileInput" accept="image/*" onchange="handleAvatarUpload(event)" class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 cursor-pointer">
       </div>
-
-      <!-- 3D Flippable Card Box -->
-      <div class="perspective-1000 w-full min-h-[320px] cursor-pointer" onclick="flipCard()">
-        <div id="card-inner" class="relative w-full h-[320px] duration-500 transform-style-3d shadow-2xs rounded-xl">
-          
-          <!-- Front Side (Question) -->
-          <div class="absolute inset-0 w-full h-full bg-white border border-border rounded-xl p-8 flex flex-col justify-between backface-hidden shadow-2xs">
-            <div class="flex justify-between items-center">
-              <span class="text-[10px] uppercase tracking-wider text-neutral-900 font-extrabold">Question</span>
-              <div class="flex items-center space-x-2">
-                <button onclick="event.stopPropagation(); speakText('card-question')" class="text-xs bg-neutral-100 text-neutral-800 hover:bg-neutral-200 px-2.5 py-1 rounded border border-neutral-200 font-medium transition-all" title="Read Aloud">
-                  Listen 🔊
-                </button>
-                <span class="text-[10px] text-neutral-400 font-medium bg-neutral-50 px-2 py-1 rounded border border-neutral-100">Click to flip 🔄</span>
-              </div>
-            </div>
-            <p id="card-question" class="text-base font-medium text-neutral-900 my-auto text-center px-4"></p>
-            <div class="text-center text-[11px] text-neutral-400 font-medium">Click anywhere to reveal answer 👇</div>
-          </div>
-
-          <!-- Back Side (Answer) -->
-          <div class="absolute inset-0 w-full h-full bg-white border border-border rounded-xl p-8 flex flex-col justify-between backface-hidden rotate-y-180 shadow-2xs">
-            <div class="flex justify-between items-center">
-              <span class="text-[10px] uppercase tracking-wider text-neutral-500 font-extrabold">Answer</span>
-              <div class="flex items-center space-x-1.5">
-                <button onclick="event.stopPropagation(); speakText('card-answer')" class="text-xs bg-neutral-100 text-neutral-800 hover:bg-neutral-200 px-2.5 py-1 rounded border border-neutral-200 font-medium transition-all" title="Read Aloud">
-                  Listen 🔊
-                </button>
-                <button onclick="event.stopPropagation(); openAiExplanation()" class="text-xs bg-neutral-900 text-white hover:bg-neutral-800 px-2.5 py-1 rounded font-medium transition-all" title="AI Deep Dive">
-                  Explain More 🧠
-                </button>
-                <button onclick="event.stopPropagation(); verifyWithTavily()" class="text-xs bg-neutral-200 text-neutral-900 hover:bg-neutral-300 px-2.5 py-1 rounded font-medium transition-all" title="Verify with Tavily Live Web Search">
-                  Verify Web 🌐
-                </button>
-                <span class="text-[10px] text-neutral-400 font-medium bg-neutral-50 px-2 py-1 rounded border border-neutral-100">Flipped ⚡</span>
-              </div>
-            </div>
-            <p id="card-answer" class="text-sm text-neutral-700 my-auto text-center px-4"></p>
-            <div class="text-center text-[11px] text-neutral-400 font-medium">Rate your recall below 👇</div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- SRS Rating Buttons (Hard = Red, Good = Amber/Yellow, Easy = Green) -->
-      <div id="srs-actions" class="grid grid-cols-3 gap-3 opacity-40 pointer-events-none transition-all">
-        <button onclick="event.stopPropagation(); submitReview('hard')" class="srs-btn bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 font-medium py-3 rounded-xl text-xs transition-all shadow-2xs">
-          Hard 🔴
-        </button>
-        <button onclick="event.stopPropagation(); submitReview('good')" class="srs-btn bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-700 font-medium py-3 rounded-xl text-xs transition-all shadow-2xs">
-          Good 🟡
-        </button>
-        <button onclick="event.stopPropagation(); submitReview('easy')" class="srs-btn bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 font-medium py-3 rounded-xl text-xs transition-all shadow-2xs">
-          Easy 🟢
-        </button>
-      </div>
-
-      <!-- Feedback Toast -->
-      <div id="feedback-toast" class="hidden text-center text-xs font-medium text-neutral-600 py-1">
-        Saved! ✓ Advancing...
-      </div>
-    </section>
-
-    <!-- TAB 4: WEAKNESS QUIZ PAGE VIEW -->
-    <section id="tab-quiz" class="hidden space-y-6 max-w-2xl mx-auto">
-      <div class="flex items-center justify-between">
-        <button onclick="switchTab('dashboard')" class="text-xs text-neutral-900 hover:underline font-semibold">← Back to Dashboard</button>
-        <h3 class="text-xs font-bold text-neutral-700 uppercase tracking-wide">🎯 AI Weakness Hunter Quiz</h3>
-      </div>
-      <div id="quiz-container-box" class="bg-white border border-border rounded-xl shadow-2xs p-8 space-y-6">
-        <!-- Quiz content rendered dynamically here -->
-      </div>
-    </section>
-
-  </main>
-
-  <!-- AI Explanation & Interactive Chat Modal Popup -->
-  <div id="aiModal" class="fixed inset-0 bg-neutral-900/40 backdrop-blur-2xs hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white border border-border rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4">
-      <div class="flex items-center justify-between border-b border-neutral-100 pb-3">
-        <h3 class="font-bold text-neutral-900 text-xs flex items-center space-x-2">
-          <span>🧠 NVIDIA Nemotron AI Tutor</span>
-        </h3>
-        <button onclick="closeAiModal()" class="text-neutral-400 hover:text-neutral-900 font-bold text-xs w-6 h-6 flex items-center justify-center rounded-md hover:bg-neutral-100 transition-all">✕</button>
-      </div>
-      
-      <!-- Explanation & Chat History Box -->
-      <div id="aiModalContent" class="text-xs text-neutral-700 leading-relaxed max-h-[250px] overflow-y-auto space-y-3 p-2">
-        <span class="text-neutral-400 animate-pulse">Generating deep-dive explanation with Nebius Token Factory...</span>
-      </div>
-
-      <!-- Interactive Follow-up Question Input -->
-      <div class="flex items-center space-x-2 pt-2 border-t border-neutral-100">
-        <input type="text" id="tutorQueryInput" onkeydown="if(event.key==='Enter') askTutorFollowUp()" placeholder="Ask a follow-up question..." class="flex-1 rounded-lg border border-border p-2 text-xs bg-neutral-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900">
-        <button onclick="askTutorFollowUp()" id="tutorSendBtn" class="bg-neutral-900 hover:bg-neutral-800 text-white font-medium text-xs px-3.5 py-2 rounded-lg transition-all shadow-2xs">Ask 💬</button>
+      <div class="pt-2">
+        <button onclick="closeAvatarModal()" class="w-full py-2 bg-slate-100 text-slate-700 font-semibold text-xs rounded-xl hover:bg-slate-200 transition-all">Done</button>
       </div>
     </div>
   </div>
 
-  <footer class="w-full text-center py-6 text-[11px] text-neutral-400 border-t border-border bg-white">
-    Synapse AI &bull; Powered by Nebius Studio & Supabase
-  </footer>
+  <!-- DYNAMIC DATE PICKER MODAL -->
+  <div id="calendarModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-2xs hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Select Date</span>
+        <span id="selected-date-preview" class="text-xs font-extrabold text-teal-600">Sat, Oct 24</span>
+      </div>
+
+      <div class="flex items-center justify-between gap-2">
+        <select id="cal-month-select" onchange="renderCalendar()" class="text-xs font-semibold border border-slate-200 rounded-lg p-2 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-teal-500">
+          <option value="0">January</option>
+          <option value="1">February</option>
+          <option value="2">March</option>
+          <option value="3">April</option>
+          <option value="4">May</option>
+          <option value="5">June</option>
+          <option value="6">July</option>
+          <option value="7">August</option>
+          <option value="8">September</option>
+          <option value="9" selected>October</option>
+          <option value="10">November</option>
+          <option value="11">December</option>
+        </select>
+
+        <select id="cal-year-select" onchange="renderCalendar()" class="text-xs font-semibold border border-slate-200 rounded-lg p-2 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-teal-500"></select>
+      </div>
+
+      <div class="text-center space-y-2">
+        <div class="grid grid-cols-7 gap-1 text-[11px] font-bold text-slate-400">
+          <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+        </div>
+        <div id="cal-days-grid" class="grid grid-cols-7 gap-1 text-xs font-medium text-slate-700"></div>
+      </div>
+
+      <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+        <button onclick="closeCalendarModal()" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-lg transition-all">Cancel</button>
+        <button onclick="confirmCalendarDate()" class="px-4 py-2 text-xs font-semibold bg-teal-600 text-white rounded-lg shadow-2xs hover:bg-teal-700 transition-all">Ok</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP DASHBOARD WRAPPER -->
+  <div id="main-app" class="hidden min-h-screen flex flex-col md:flex-row bg-[#f8fafc]">
+
+    <!-- SIDEBAR DOCK -->
+    <aside class="w-full md:w-64 bg-white border-r border-slate-200 p-5 flex flex-col justify-between shrink-0">
+      <div class="space-y-6">
+        <!-- Logo Header -->
+        <div class="flex items-center space-x-3 px-1">
+          <div class="bg-teal-600 text-white p-2 rounded-xl font-bold text-sm flex items-center justify-center w-8 h-8 shadow-xs">⚡</div>
+          <div>
+            <h1 class="text-xs font-extrabold tracking-tight text-slate-900">Synapse AI</h1>
+            <p class="text-[10px] text-teal-600 font-semibold">Active Workspace</p>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="space-y-1">
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-900 transition-all text-left">
+            <span>🏠</span> <span>Dashboard</span>
+          </button>
+          <button onclick="switchTab('generator')" id="nav-generator" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all text-left">
+            <span>🚀</span> <span>+ Create New Deck</span>
+          </button>
+          <button onclick="startSmartReview()" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all text-left">
+            <span>🔥</span> <span>Smart Review Due</span>
+          </button>
+          <button onclick="startWeaknessQuiz()" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all text-left">
+            <span>🎯</span> <span>Weakness Hunter Quiz</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- User Profile Card & XP / Level Bar in Sidebar -->
+      <div class="border-t border-slate-100 pt-4 mt-4 space-y-3">
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+          <div class="flex items-center space-x-3">
+            <div id="dashboard-avatar-chip" class="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-xs overflow-hidden bg-cover bg-center shrink-0 border border-teal-300">👤</div>
+            <div class="overflow-hidden">
+              <h4 id="user-display-name" class="text-xs font-bold text-slate-900 truncate">Student</h4>
+              <p id="user-level-tag" class="text-[10px] text-teal-600 font-bold">Level 1 Memory Master</p>
+            </div>
+          </div>
+          <!-- XP Progress Bar -->
+          <div class="space-y-1 pt-1">
+            <div class="flex justify-between text-[10px] text-slate-500 font-semibold">
+              <span id="user-xp-text">0 XP</span>
+              <span id="next-level-xp">100 XP</span>
+            </div>
+            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+              <div id="xp-progress-bar" class="bg-teal-600 h-full w-[0%] transition-all duration-500"></div>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="handleSignOut()" class="w-full text-center text-[11px] font-semibold text-red-600 bg-red-50 hover:bg-red-100 py-2 rounded-xl transition-all border border-red-100">
+          Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT VIEW -->
+    <main class="flex-1 p-6 md:p-10 overflow-y-auto max-w-5xl mx-auto w-full">
+
+      <!-- DASHBOARD TAB -->
+      <section id="tab-dashboard" class="space-y-6">
+        <!-- Personalized Greeting Banner -->
+        <div class="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-6 md:p-8 rounded-2xl shadow-sm space-y-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <span class="text-[10px] uppercase tracking-widest font-extrabold bg-teal-800/60 px-2.5 py-1 rounded-md">Gamified Study Mode</span>
+            <h2 id="greeting-banner-title" class="text-2xl font-extrabold tracking-tight">Good day, Student 👋</h2>
+            <p class="text-xs text-teal-100 max-w-md">Complete study reviews, earn XP, maintain your streak, and level up your memory!</p>
+          </div>
+          <button onclick="startSmartReview()" class="bg-white text-teal-900 hover:bg-teal-50 font-bold text-xs px-5 py-3 rounded-xl transition-all shadow-md shrink-0">
+            Start Review Session 🔥
+          </button>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-1">
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Saved Decks</p>
+            <p id="stat-decks" class="text-2xl font-extrabold text-slate-900">0</p>
+          </div>
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-1">
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Flashcards Reviewed</p>
+            <p id="stat-reviews" class="text-2xl font-extrabold text-slate-900">0</p>
+          </div>
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-1">
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Average Confidence</p>
+            <p id="stat-confidence" class="text-2xl font-extrabold text-slate-900">0%</p>
+          </div>
+        </div>
+
+        <!-- Saved Decks Section -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 md:p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-xs text-slate-900 uppercase tracking-wider">Your Study Decks</h3>
+            <button onclick="switchTab('generator')" class="text-xs font-semibold text-teal-600 hover:underline">+ New Deck</button>
+          </div>
+          <div id="saved-decks-list" class="space-y-3">
+            <div class="text-center py-12 text-xs text-slate-400 border border-dashed border-slate-200 rounded-2xl">
+              No decks generated yet. Click "+ Create New Deck" to get started!
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GENERATOR TAB -->
+      <section id="tab-generator" class="hidden space-y-6 max-w-2xl mx-auto">
+        <div class="bg-white border border-slate-200/80 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-6 sm:p-8 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">Create Study Deck</h2>
+            <p class="text-xs text-slate-500 mt-0.5">How would you like to build your deck today?</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
+            <button onclick="setCreationMode('upload')" id="mode-btn-upload" class="py-2.5 text-xs font-semibold rounded-lg bg-white text-slate-900 shadow-2xs transition-all">📁 Upload PDF File</button>
+            <button onclick="setCreationMode('chat')" id="mode-btn-chat" class="py-2.5 text-xs font-medium rounded-lg text-slate-500 hover:text-slate-900 transition-all">💬 Chat with AI / Notes</button>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Deck Title Name *</label>
+              <input type="text" id="deckTitle" class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition-all" placeholder="e.g. Chapter 1 Review">
+            </div>
+
+            <div id="input-container-upload" class="space-y-3">
+              <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Upload PDF Document</label>
+              <input type="file" id="pdfFile" accept=".pdf" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 cursor-pointer border border-slate-200 rounded-xl bg-slate-50/50 p-1">
+            </div>
+
+            <div id="input-container-chat" class="hidden space-y-3">
+              <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Talk / Paste Notes for AI to Learn From</label>
+              <textarea id="lectureContent" rows="4" class="w-full rounded-xl border border-slate-200 p-3 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition-all" placeholder="Describe the topic or paste lecture notes here..."></textarea>
+            </div>
+
+            <div>
+              <label for="cardCount" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Number of Flashcards</label>
+              <select id="cardCount" class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition-all">
+                <option value="5">5 Cards</option>
+                <option value="10" selected>10 Cards</option>
+                <option value="15">15 Cards</option>
+                <option value="20">20 Cards</option>
+              </select>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+              <label class="flex items-center space-x-2 text-xs font-medium text-slate-600 cursor-pointer">
+                <input type="checkbox" id="enableSearch" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-3.5 h-3.5">
+                <span>Enable Tavily Web Search Context</span>
+              </label>
+              <button onclick="handleGenerateAndSave()" id="generateBtn" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-5 py-3 rounded-xl text-xs transition-all shadow-sm">
+                Generate & Save Deck 💾
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STUDY SESSION TAB -->
+      <section id="tab-study" class="hidden space-y-6 max-w-2xl mx-auto">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <button onclick="switchTab('dashboard')" class="text-xs text-slate-900 hover:underline font-semibold">← Back</button>
+            <span class="text-slate-300">|</span>
+            <h3 id="current-deck-title" class="text-xs font-bold text-slate-600 uppercase tracking-wide">Study Session</h3>
+          </div>
+          <div class="flex items-center space-x-2">
+            <label for="voiceSelect" class="text-[10px] font-semibold text-slate-400">Voice:</label>
+            <select id="voiceSelect" class="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-teal-500">
+              <option value="">Default Voice</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <h2 id="deck-progress" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Card 1 of 10</h2>
+        </div>
+
+        <div class="perspective-1000 w-full min-h-[320px] cursor-pointer" onclick="flipCard()">
+          <div id="card-inner" class="relative w-full h-[320px] duration-500 transform-style-3d shadow-xs rounded-2xl">
+            
+            <!-- QUESTION FACE -->
+            <div class="absolute inset-0 w-full h-full bg-white border border-slate-200 rounded-2xl p-8 flex flex-col justify-between backface-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+              <div class="flex justify-between items-center">
+                <span class="text-[10px] uppercase tracking-wider text-teal-600 font-extrabold">Question</span>
+                <div class="flex items-center space-x-2">
+                  <button onclick="event.stopPropagation(); startVoiceRecognition()" id="mic-btn" class="text-xs bg-teal-50 text-teal-700 hover:bg-teal-100 px-2.5 py-1 rounded-lg border border-teal-200 font-semibold transition-all flex items-center space-x-1" title="Speak your answer out loud!">
+                    <span>🎙️ Speak Answer</span>
+                  </button>
+                  <button onclick="event.stopPropagation(); speakText('card-question')" class="text-xs bg-slate-100 text-slate-800 hover:bg-slate-200 px-2.5 py-1 rounded-lg border border-slate-200 font-medium transition-all" title="Read Aloud">
+                    Listen 🔊
+                  </button>
+                </div>
+              </div>
+
+              <div class="space-y-3 my-auto text-center px-4">
+                <p id="card-question" class="text-base font-medium text-slate-900 leading-relaxed"></p>
+                <!-- Voice Transcription Transcript Box -->
+                <div id="voice-transcript-box" class="hidden p-3 bg-teal-50/80 border border-teal-200 rounded-xl text-xs text-teal-900 font-medium animate-pulse">
+                  🗣️ Hearing: <span id="transcript-text">Listening...</span>
+                </div>
+              </div>
+
+              <div class="text-center text-[11px] text-slate-400 font-medium">Click anywhere to flip card 🔄</div>
+            </div>
+
+            <!-- ANSWER FACE -->
+            <div class="absolute inset-0 w-full h-full bg-white border border-slate-200 rounded-2xl p-8 flex flex-col justify-between backface-hidden rotate-y-180 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+              <div class="flex justify-between items-center">
+                <span class="text-[10px] uppercase tracking-wider text-slate-500 font-extrabold">Answer</span>
+                <div class="flex items-center space-x-1.5">
+                  <button onclick="event.stopPropagation(); speakText('card-answer')" class="text-xs bg-slate-100 text-slate-800 hover:bg-slate-200 px-2.5 py-1 rounded-lg border border-slate-200 font-medium transition-all" title="Read Aloud">
+                    Listen 🔊
+                  </button>
+                  <button onclick="event.stopPropagation(); openAiExplanationStream()" class="text-xs bg-teal-600 text-white hover:bg-teal-700 px-2.5 py-1 rounded-lg font-medium transition-all" title="AI Deep Dive">
+                    Explain More 🧠
+                  </button>
+                  <button onclick="event.stopPropagation(); verifyWithTavily()" class="text-xs bg-slate-100 text-slate-800 hover:bg-slate-200 px-2.5 py-1 rounded-lg font-medium transition-all" title="Verify with Tavily Live Web Search">
+                    Verify Web 🌐
+                  </button>
+                </div>
+              </div>
+              <p id="card-answer" class="text-sm text-slate-700 my-auto text-center px-4 leading-relaxed"></p>
+              <div class="text-center text-[11px] text-slate-400 font-medium">Rate your recall below 👇</div>
+            </div>
+
+          </div>
+        </div>
+
+        <div id="srs-actions" class="grid grid-cols-3 gap-3 opacity-40 pointer-events-none transition-all">
+          <button onclick="event.stopPropagation(); submitReview('hard')" class="srs-btn bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 font-semibold py-3 rounded-xl text-xs transition-all shadow-2xs">
+            Hard 🔴
+          </button>
+          <button onclick="event.stopPropagation(); submitReview('good')" class="srs-btn bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-700 font-semibold py-3 rounded-xl text-xs transition-all shadow-2xs">
+            Good 🟡
+          </button>
+          <button onclick="event.stopPropagation(); submitReview('easy')" class="srs-btn bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 font-semibold py-3 rounded-xl text-xs transition-all shadow-2xs">
+            Easy 🟢
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-2 text-[10px] text-slate-400 font-mono pt-1">
+          <span><kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-slate-700">Space</kbd> Flip</span>
+          <span>&bull;</span>
+          <span><kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-slate-700">1</kbd> Hard</span>
+          <span><kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-slate-700">2</kbd> Good</span>
+          <span><kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-slate-700">3</kbd> Easy</span>
+          <span>&bull;</span>
+          <span><kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-slate-700">S</kbd> Listen</span>
+          <span><kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-slate-700">E</kbd> Explain</span>
+        </div>
+
+        <div id="feedback-toast" class="hidden text-center text-xs font-medium text-slate-600 py-1">
+          Saved! ✓ Advancing...
+        </div>
+      </section>
+
+      <!-- WEAKNESS QUIZ TAB -->
+      <section id="tab-quiz" class="hidden space-y-6 max-w-2xl mx-auto">
+        <div class="flex items-center justify-between">
+          <button onclick="switchTab('dashboard')" class="text-xs text-slate-900 hover:underline font-semibold">← Back to Dashboard</button>
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide">🎯 AI Weakness Hunter Quiz</h3>
+        </div>
+        <div id="quiz-container-box" class="bg-white border border-slate-200/80 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-8 space-y-6"></div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- AI Explanation Modal -->
+  <div id="aiModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-2xs hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-900 text-xs flex items-center space-x-2">
+          <span>🧠 NVIDIA Nemotron AI Tutor</span>
+        </h3>
+        <button onclick="closeAiModal()" class="text-slate-400 hover:text-slate-900 font-bold text-xs w-6 h-6 flex items-center justify-center rounded-md hover:bg-slate-100 transition-all">✕</button>
+      </div>
+      
+      <div id="aiModalContent" class="text-xs text-slate-700 leading-relaxed max-h-[250px] overflow-y-auto space-y-3 p-2">
+        <span class="text-teal-600 font-medium animate-pulse">⚡ Streaming instant Nemotron explanation...</span>
+      </div>
+
+      <div class="flex items-center space-x-2 pt-2 border-t border-slate-100">
+        <input type="text" id="tutorQueryInput" onkeydown="if(event.key==='Enter') openAiExplanationStream(this.value)" placeholder="Ask a follow-up question..." class="flex-1 rounded-xl border border-slate-200 p-2.5 text-xs bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-500">
+        <button onclick="openAiExplanationStream(document.getElementById('tutorQueryInput').value)" id="tutorSendBtn" class="bg-teal-600 hover:bg-teal-700 text-white font-medium text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm">Ask 💬</button>
+      </div>
+    </div>
+  </div>
 
   <!-- App Controller Script -->
   <script>
+    let currentUser = localStorage.getItem('synapse_user');
+    let userAvatar = localStorage.getItem('synapse_avatar') || '👤';
     let savedDecks = JSON.parse(localStorage.getItem('synapse_decks') || '[]');
     let currentDeckIndex = null;
     let currentDeckCards = [];
     let currentIndex = 0;
     let isFlipped = false;
     let totalReviewsCount = parseInt(localStorage.getItem('synapse_reviews') || '0');
+    
+    // Gamification state
+    let userXP = parseInt(localStorage.getItem('synapse_xp') || '0');
+    let userLevel = parseInt(localStorage.getItem('synapse_level') || '1');
+
     let availableVoices = [];
     let currentQuiz = { questions: [], index: 0 };
     let currentCreationMode = 'upload';
+    
+    let calSelectedDay = 24;
+    let calSelectedMonth = 9;
+    let calSelectedYear = 2009;
+
+    window.speechUtterances = [];
+
+    // CUSTOM TOAST NOTIFICATION SYSTEM
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const bgColors = {
+        info: 'bg-slate-900 text-white border-slate-800',
+        success: 'bg-teal-600 text-white border-teal-700',
+        warning: 'bg-amber-500 text-white border-amber-600',
+        error: 'bg-red-600 text-white border-red-700'
+      };
+
+      toast.className = `pointer-events-auto flex items-center space-x-2 px-4 py-3 rounded-xl border text-xs font-semibold shadow-lg transition-all duration-300 transform translate-y-2 opacity-0 ${bgColors[type] || bgColors.info}`;
+      toast.innerHTML = `<span>${message}</span>`;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
 
     window.addEventListener('DOMContentLoaded', () => {
+      initYearDropdown();
+      checkAuthAndRedirect();
       updateDashboardStats();
+      updateXpBar();
       renderSavedDecksList();
       loadVoices();
       if ('speechSynthesis' in window) {
@@ -291,343 +522,503 @@
       }
     });
 
-    function setCreationMode(mode) {
-      currentCreationMode = mode;
-      const uploadBox = document.getElementById('input-container-upload');
-      const chatBox = document.getElementById('input-container-chat');
-      
-      const uploadBtn = document.getElementById('mode-btn-upload');
-      const chatBtn = document.getElementById('mode-btn-chat');
-
-      uploadBox.classList.add('hidden');
-      chatBox.classList.add('hidden');
-
-      uploadBtn.className = 'py-2 text-xs font-medium rounded-md text-neutral-500 hover:text-neutral-900 transition-all';
-      chatBtn.className = 'py-2 text-xs font-medium rounded-md text-neutral-500 hover:text-neutral-900 transition-all';
-
-      if (mode === 'upload') {
-        uploadBox.classList.remove('hidden');
-        uploadBtn.className = 'py-2 text-xs font-semibold rounded-md bg-white text-neutral-900 shadow-2xs transition-all';
-      } else if (mode === 'chat') {
-        chatBox.classList.remove('hidden');
-        chatBtn.className = 'py-2 text-xs font-semibold rounded-md bg-white text-neutral-900 shadow-2xs transition-all';
-      }
-    }
-
-    function formatMarkdown(text) {
-      if (!text) return '';
-      return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-neutral-900">$1</strong>');
-    }
-
-    function loadVoices() {
-      if (!('speechSynthesis' in window)) return;
-      availableVoices = window.speechSynthesis.getVoices();
-      const select = document.getElementById('voiceSelect');
-      if (!select) return;
-
-      select.innerHTML = '<option value="">Default Voice</option>';
-
-      availableVoices.forEach((voice, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        let genderHint = '';
-        const nameLower = voice.name.toLowerCase();
-        if (nameLower.includes('male') || nameLower.includes('david') || nameLower.includes('george') || nameLower.includes('daniel') || nameLower.includes('oliver') || nameLower.includes('ryan')) {
-          genderHint = ' (Male)';
-        } else if (nameLower.includes('female') || nameLower.includes('zira') || nameLower.includes('sara') || nameLower.includes('jenna') || nameLower.includes('victoria') || nameLower.includes('karen')) {
-          genderHint = ' (Female)';
-        }
-        option.textContent = `${voice.name} [${voice.lang}]${genderHint}`;
-        select.appendChild(option);
-      });
-    }
-
-    function safeSetText(id, text) {
-      const el = document.getElementById(id);
-      if (el) el.textContent = text;
-    }
-
-    function stopSpeech() {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    }
-
-    function speakText(elementId) {
-      if (!('speechSynthesis' in window)) {
-        alert('Text-to-speech is not supported in your browser.');
+    // VOICE SPEECH-TO-TEXT CHECKING
+    function startVoiceRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showToast('Speech Recognition is not supported in your browser. Try Google Chrome!', 'error');
         return;
       }
-      stopSpeech();
-      const el = document.getElementById(elementId);
-      if (el && el.textContent) {
-        const utterance = new SpeechSynthesisUtterance(el.textContent);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
 
-        const voiceSelect = document.getElementById('voiceSelect');
-        if (voiceSelect && voiceSelect.value !== '') {
-          const selectedVoice = availableVoices[parseInt(voiceSelect.value)];
-          if (selectedVoice) {
-            utterance.voice = selectedVoice;
-          }
-        }
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
 
-        window.speechSynthesis.speak(utterance);
-      }
-    }
+      const transcriptBox = document.getElementById('voice-transcript-box');
+      const transcriptText = document.getElementById('transcript-text');
 
-    async function openAiExplanation() {
-      const card = currentDeckCards[currentIndex];
-      const modal = document.getElementById('aiModal');
-      const content = document.getElementById('aiModalContent');
-      
-      modal.classList.remove('hidden');
-      content.innerHTML = `<div class="p-3 bg-neutral-100 text-neutral-800 rounded-lg"><span class="animate-pulse">🧠 Nemotron AI is analyzing "${card.question}"...</span></div>`;
+      transcriptBox.classList.remove('hidden');
+      transcriptText.textContent = 'Listening to your voice... Speak now!';
 
-      try {
-        const res = await fetch('/api/explain', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: card.question, answer: card.answer })
-        });
+      recognition.onresult = (event) => {
+        const spokenText = event.results[0][0].transcript;
+        transcriptText.textContent = `"${spokenText}"`;
         
-        if (!res.ok) {
-          const errText = await res.text();
-          throw new Error(`Server status ${res.status}: ${errText.slice(0, 100)}`);
-        }
+        const card = currentDeckCards[currentIndex];
+        const correctAnswer = card.answer.toLowerCase();
 
-        const data = await res.json();
-        content.innerHTML = `
-          <div class="p-3.5 bg-neutral-50 border border-neutral-200 rounded-lg space-y-1">
-            <p class="font-bold text-xs text-neutral-900 mb-1">Deep Dive & Analogy:</p>
-            <p>${formatMarkdown(data.explanation)}</p>
-          </div>
-        `;
-      } catch (err) {
-        content.innerHTML = `
-          <div class="p-3.5 bg-neutral-50 border border-neutral-200 rounded-lg space-y-2">
-            <p class="font-bold text-xs text-neutral-900">Deep Dive & Analogy:</p>
-            <p><strong>Concept:</strong> ${card.question}</p>
-            <p><strong>Key Insight:</strong> ${card.answer}</p>
-          </div>
-        `;
-      }
+        showToast(`Heard: "${spokenText}" 🎙️ Flipped card to check!`, 'success');
+        setTimeout(() => {
+          transcriptBox.classList.add('hidden');
+          flipCard(); // Automatically flip card to reveal answer
+        }, 1200);
+      };
+
+      recognition.onerror = (event) => {
+        transcriptText.textContent = 'Could not catch audio. Try again!';
+        setTimeout(() => transcriptBox.classList.add('hidden'), 2000);
+      };
+
+      recognition.start();
     }
 
-    async function verifyWithTavily() {
-      const card = currentDeckCards[currentIndex];
-      const modal = document.getElementById('aiModal');
-      const content = document.getElementById('aiModalContent');
+    // GAMIFICATION & XP REWARD SYSTEM
+    function addXP(amount) {
+      userXP += amount;
+      const xpNeededForNextLevel = userLevel * 100;
 
-      modal.classList.remove('hidden');
-      content.innerHTML = `<div class="p-3 bg-neutral-100 text-neutral-800 rounded-lg"><span class="animate-pulse">🌐 Tavily AI is searching live web references for "${card.question}"...</span></div>`;
-
-      try {
-        const res = await fetch('/api/verify-tavily', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: card.question, answer: card.answer })
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-
-        const sources = data.sources || [];
-        if (sources.length === 0) {
-          content.innerHTML = `<div class="p-3 bg-neutral-50 text-neutral-600 rounded-lg">No live sources found.</div>`;
-          return;
-        }
-
-        let sourcesHtml = sources.map(s => `
-          <div class="p-3 bg-white border border-neutral-200 rounded-lg shadow-2xs space-y-1 text-left">
-            <a href="${s.url}" target="_blank" class="text-xs font-bold text-neutral-900 hover:underline flex items-center justify-between">
-              <span>${s.title}</span> 🔗
-            </a>
-            <p class="text-[11px] text-neutral-500">${s.snippet}</p>
-          </div>
-        `).join('');
-
-        content.innerHTML = `
-          <div class="p-3.5 bg-neutral-50 border border-neutral-200 rounded-lg space-y-2">
-            <p class="font-bold text-xs text-neutral-900 flex items-center justify-between">
-              <span>🌐 Tavily Live Verified Sources:</span>
-              <span class="text-[10px] bg-neutral-200 text-neutral-800 px-2 py-0.5 rounded font-mono">Real-time Web</span>
-            </p>
-            <div class="space-y-2 mt-2">${sourcesHtml}</div>
-          </div>
-        `;
-      } catch (err) {
-        content.innerHTML = `<div class="p-3.5 bg-neutral-100 text-neutral-900 rounded-lg">Tavily Search Error: ${err.message}</div>`;
-      }
-    }
-
-    async function startWeaknessQuiz() {
-      let weakCards = [];
-      savedDecks.forEach(deck => {
-        deck.cards.forEach(card => {
-          if ((card.repetition_level || 0) < 2) {
-            weakCards.push(card);
-          }
-        });
-      });
-
-      if (weakCards.length === 0) {
-        alert('No weak cards found! You are mastering everything. Review some decks first.');
-        return;
-      }
-
-      switchTab('quiz');
-      const box = document.getElementById('quiz-container-box');
-      box.innerHTML = `<div class="text-center py-12 text-neutral-700 font-medium"><span class="animate-pulse">🎯 Nemotron AI is building your custom Weakness Quiz page...</span></div>`;
-
-      try {
-        const res = await fetch('/api/weakness-quiz', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ weakCards: weakCards.slice(0, 5) })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-
-        currentQuiz = {
-          questions: data.quizQuestions || [],
-          index: 0
-        };
-
-        renderQuizPage();
-      } catch (err) {
-        box.innerHTML = `<div class="p-4 bg-neutral-100 text-neutral-900 rounded-lg text-center">Error loading quiz: ${err.message}</div>`;
-      }
-    }
-
-    function renderQuizPage() {
-      const box = document.getElementById('quiz-container-box');
-      if (!currentQuiz.questions || currentQuiz.index >= currentQuiz.questions.length) {
-        box.innerHTML = `
-          <div class="text-center py-12 space-y-4">
-            <h2 class="text-2xl font-bold text-neutral-900">🎉 Quiz Page Completed!</h2>
-            <p class="text-xs text-neutral-500">You successfully targeted your weak spots with Nemotron AI.</p>
-            <button onclick="switchTab('dashboard')" class="bg-neutral-900 hover:bg-neutral-800 text-white font-medium px-5 py-2 rounded-lg text-xs transition-all shadow-2xs">Return to Dashboard</button>
-          </div>
-        `;
-        return;
-      }
-
-      const q = currentQuiz.questions[currentQuiz.index];
-      box.innerHTML = `
-        <div class="space-y-6">
-          <div class="flex items-center justify-between border-b border-neutral-100 pb-3">
-            <span class="text-[11px] font-bold text-neutral-900 uppercase tracking-wider">Weakness Hunter Quiz</span>
-            <span class="text-[11px] font-semibold text-neutral-400">Question ${currentQuiz.index + 1} of ${currentQuiz.questions.length}</span>
-          </div>
-          <h3 class="text-sm font-bold text-neutral-900">${q.question}</h3>
-          <div class="space-y-2.5" id="quiz-options-list">
-            ${(q.options || []).map(opt => `
-              <button onclick="handleQuizSelection(this, '${opt.replace(/'/g, "\\'")}', '${q.correctAnswer.replace(/'/g, "\\'")}')" class="w-full text-left text-xs p-3.5 bg-neutral-50 hover:bg-neutral-100 border border-border rounded-lg transition-all font-medium text-neutral-800">${opt}</button>
-            `).join('')}
-          </div>
-          <!-- Hint-Only AI Correction Box -->
-          <div id="quiz-correction-box" class="hidden p-3.5 bg-neutral-50 border border-neutral-200 rounded-lg text-xs space-y-1">
-            <p class="font-bold text-neutral-900">💡 AI Hint & Direction:</p>
-            <p id="quiz-correction-text" class="text-neutral-600"></p>
-          </div>
-          <div id="quiz-next-area" class="hidden pt-2">
-            <button onclick="currentQuiz.index++; renderQuizPage();" class="bg-neutral-900 hover:bg-neutral-800 text-white font-medium px-5 py-2 rounded-lg text-xs transition-all shadow-2xs">Next Question →</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function handleQuizSelection(btnElement, selected, correct) {
-      const buttons = document.querySelectorAll('#quiz-options-list button');
-      const isCorrect = selected.trim().toLowerCase() === correct.trim().toLowerCase();
-
-      buttons.forEach(b => {
-        b.disabled = true;
-        if (b.textContent.trim().toLowerCase() === correct.trim().toLowerCase()) {
-          b.className = 'w-full text-left text-xs p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-lg font-semibold';
-        } else if (b === btnElement) {
-          b.className = 'w-full text-left text-xs p-3.5 bg-red-50 border border-red-300 text-red-800 rounded-lg font-semibold';
-        } else {
-          b.className = 'w-full text-left text-xs p-3.5 bg-neutral-50 opacity-40 border border-border rounded-lg font-medium text-neutral-400';
-        }
-      });
-
-      const correctionBox = document.getElementById('quiz-correction-box');
-      const correctionText = document.getElementById('quiz-correction-text');
-
-      if (isCorrect) {
-        correctionBox.className = 'p-3.5 bg-emerald-50/60 border border-emerald-200 rounded-lg text-xs space-y-1';
-        correctionText.textContent = 'Spot on! You selected the correct answer.';
+      if (userXP >= xpNeededForNextLevel) {
+        userLevel++;
+        userXP -= xpNeededForNextLevel;
+        showToast(`🎉 Level Up! You reached Level ${userLevel}! 🌟`, 'success');
+        // Trigger celebratory confetti on level up!
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       } else {
-        correctionBox.className = 'p-3.5 bg-red-50/60 border border-red-200 rounded-lg text-xs space-y-1';
-        correctionText.textContent = `Not quite right. Hint: Think carefully about the primary definition of this concept—re-evaluate the options that focus on the core foundational rule rather than secondary details.`;
+        showToast(`+${amount} XP Gained! ⭐`, 'success');
       }
 
-      correctionBox.classList.remove('hidden');
-      document.getElementById('quiz-next-area').classList.remove('hidden');
+      localStorage.setItem('synapse_xp', userXP);
+      localStorage.setItem('synapse_level', userLevel);
+      updateXpBar();
     }
 
-    async function askTutorFollowUp() {
-      const input = document.getElementById('tutorQueryInput');
-      const content = document.getElementById('aiModalContent');
-      const query = input.value.trim();
-      if (!query) return;
+    function updateXpBar() {
+      const xpNeeded = userLevel * 100;
+      const percent = Math.min(100, Math.round((userXP / xpNeeded) * 100));
+      
+      safeSetText('user-level-tag', `Level ${userLevel} Memory Master`);
+      safeSetText('user-xp-text', `${userXP} XP`);
+      safeSetText('next-level-xp', `${xpNeeded} XP`);
+      
+      const bar = document.getElementById('xp-progress-bar');
+      if (bar) bar.style.width = `${percent}%`;
+    }
 
+    window.addEventListener('keydown', (e) => {
+      const mainApp = document.getElementById('main-app');
+      const tabStudy = document.getElementById('tab-study');
+      const aiModal = document.getElementById('aiModal');
+      
+      if (
+        mainApp.classList.contains('hidden') ||
+        !tabStudy || 
+        tabStudy.classList.contains('hidden') || 
+        (aiModal && !aiModal.classList.contains('hidden')) ||
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)
+      ) {
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+
+      if (e.code === 'Space' || e.key === 'Enter') {
+        e.preventDefault();
+        flipCard();
+      } else if (key === '1') {
+        e.preventDefault();
+        if (isFlipped) submitReview('hard');
+      } else if (key === '2') {
+        e.preventDefault();
+        if (isFlipped) submitReview('good');
+      } else if (key === '3') {
+        e.preventDefault();
+        if (isFlipped) submitReview('easy');
+      } else if (key === 's') {
+        e.preventDefault();
+        speakText(isFlipped ? 'card-answer' : 'card-question');
+      } else if (key === 'e') {
+        e.preventDefault();
+        if (isFlipped) openAiExplanationStream();
+      }
+    });
+
+    function openAvatarModal() {
+      document.getElementById('avatarModal').classList.remove('hidden');
+    }
+
+    function closeAvatarModal() {
+      document.getElementById('avatarModal').classList.add('hidden');
+    }
+
+    function selectEmojiAvatar(emoji) {
+      userAvatar = emoji;
+      localStorage.setItem('synapse_avatar', emoji);
+      updateAvatarPreviews();
+      closeAvatarModal();
+      showToast('Profile icon updated! ✨', 'success');
+    }
+
+    function handleAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          userAvatar = `url('${e.target.result}')`;
+          localStorage.setItem('synapse_avatar', userAvatar);
+          updateAvatarPreviews();
+          closeAvatarModal();
+          showToast('Custom profile image uploaded! 🖼️', 'success');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function updateAvatarPreviews() {
+      const previewBox = document.getElementById('avatar-preview');
+      const emojiSpan = document.getElementById('avatar-emoji');
+      const chipBox = document.getElementById('dashboard-avatar-chip');
+
+      if (userAvatar.startsWith('url(')) {
+        previewBox.style.backgroundImage = userAvatar;
+        emojiSpan.textContent = '';
+        chipBox.style.backgroundImage = userAvatar;
+        chipBox.textContent = '';
+      } else {
+        previewBox.style.backgroundImage = 'none';
+        emojiSpan.textContent = userAvatar;
+        chipBox.style.backgroundImage = 'none';
+        chipBox.textContent = userAvatar;
+      }
+    }
+
+    function initYearDropdown() {
+      const yearSelect = document.getElementById('cal-year-select');
+      if (!yearSelect) return;
+      yearSelect.innerHTML = '';
+      const currentYear = new Date().getFullYear();
+      for (let y = currentYear; y >= 1940; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        if (y === 2009) opt.selected = true;
+        yearSelect.appendChild(opt);
+      }
+    }
+
+    function openCalendarModal() {
+      document.getElementById('calendarModal').classList.remove('hidden');
+      renderCalendar();
+    }
+
+    function closeCalendarModal() {
+      document.getElementById('calendarModal').classList.add('hidden');
+    }
+
+    function renderCalendar() {
+      const monthSelect = document.getElementById('cal-month-select');
+      const yearSelect = document.getElementById('cal-year-select');
+      const grid = document.getElementById('cal-days-grid');
+      const preview = document.getElementById('selected-date-preview');
+
+      if (!monthSelect || !yearSelect || !grid) return;
+
+      calSelectedMonth = parseInt(monthSelect.value);
+      calSelectedYear = parseInt(yearSelect.value);
+
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      preview.textContent = `${monthNames[calSelectedMonth]} ${calSelectedDay}, ${calSelectedYear}`;
+
+      grid.innerHTML = '';
+      const firstDay = new Date(calSelectedYear, calSelectedMonth, 1).getDay();
+      const totalDays = new Date(calSelectedYear, calSelectedMonth + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += `<span class="p-1.5 opacity-20 text-slate-400">•</span>`;
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const isSelected = day === calSelectedDay;
+        const btnClass = isSelected
+          ? 'p-1.5 bg-teal-500 text-white font-bold rounded-full shadow-xs'
+          : 'p-1.5 hover:bg-slate-100 rounded-full transition-all';
+        grid.innerHTML += `<button onclick="pickDay(${day})" class="${btnClass}">${day}</button>`;
+      }
+    }
+
+    function pickDay(day) {
+      calSelectedDay = day;
+      renderCalendar();
+    }
+
+    function confirmCalendarDate() {
+      const monthFormatted = String(calSelectedMonth + 1).padStart(2, '0');
+      const dayFormatted = String(calSelectedDay).padStart(2, '0');
+      document.getElementById('setupBirthday').value = `${monthFormatted}/${dayFormatted}/${calSelectedYear}`;
+      closeCalendarModal();
+    }
+
+    function validateUsername() {
+      const val = document.getElementById('setupUsername').value.trim().toLowerCase();
+      const err = document.getElementById('username-error');
+      if (val === 'taken' || val === 'lsds') {
+        err.classList.remove('hidden');
+      } else {
+        err.classList.add('hidden');
+      }
+    }
+
+    function checkAuthAndRedirect() {
+      const authPage = document.getElementById('auth-page');
+      const mainApp = document.getElementById('main-app');
+      const nameDisplay = document.getElementById('user-display-name');
+      const bannerTitle = document.getElementById('greeting-banner-title');
+      const emailTag = document.getElementById('user-email-tag');
+
+      updateAvatarPreviews();
+
+      if (currentUser) {
+        authPage.classList.add('hidden');
+        mainApp.classList.remove('hidden');
+        const firstName = currentUser.split(' ')[0];
+        if (nameDisplay) nameDisplay.textContent = currentUser;
+        if (bannerTitle) bannerTitle.textContent = `Good day, ${firstName} 👋`;
+      } else {
+        authPage.classList.remove('hidden');
+        mainApp.classList.add('hidden');
+        if (emailTag) emailTag.textContent = 'narmeennayyab2009@gmail.com';
+      }
+    }
+
+    function executeAuthRedirect() {
+      const fullName = document.getElementById('setupFullName').value.trim();
+      const username = document.getElementById('setupUsername').value.trim();
+
+      currentUser = fullName || username || 'Narmeen Imran';
+      localStorage.setItem('synapse_user', currentUser);
+      checkAuthAndRedirect();
+      showToast(`Welcome to Synapse AI, ${currentUser}! ⚡`, 'success');
+    }
+
+    function handleSignOut() {
+      localStorage.removeItem('synapse_user');
+      currentUser = null;
+      checkAuthAndRedirect();
+      showToast('Logged out successfully', 'info');
+    }
+
+    async function openAiExplanationStream(userQuery = '') {
       const card = currentDeckCards[currentIndex];
-      input.value = '';
+      const modal = document.getElementById('aiModal');
+      const content = document.getElementById('aiModalContent');
 
-      content.innerHTML += `
-        <div class="p-3 bg-neutral-100 rounded-lg text-right">
-          <p class="font-bold text-[10px] text-neutral-500 mb-0.5">You:</p>
-          <p class="text-xs">${query}</p>
-        </div>
-      `;
+      modal.classList.remove('hidden');
+      
+      if (!userQuery) {
+        content.innerHTML = `<div class="p-3 bg-slate-50 border border-slate-200 rounded-xl"><p id="stream-target" class="text-xs text-slate-800 leading-relaxed"></p></div>`;
+      } else {
+        document.getElementById('tutorQueryInput').value = '';
+        content.innerHTML += `<div class="p-3 bg-slate-100 rounded-xl text-right my-2"><p class="text-xs font-medium">${userQuery}</p></div><div class="p-3 bg-slate-50 border border-slate-200 rounded-xl"><p id="stream-target" class="text-xs text-slate-800 leading-relaxed"></p></div>`;
+      }
 
-      const loadingId = 'loading-' + Date.now();
-      content.innerHTML += `
-        <div id="${loadingId}" class="p-3 bg-neutral-100 rounded-lg">
-          <p class="font-bold text-[10px] text-neutral-900 mb-0.5">Nemotron AI Tutor:</p>
-          <p class="animate-pulse text-neutral-600 text-xs">Thinking deeper...</p>
-        </div>
-      `;
-      content.scrollTop = content.scrollHeight;
+      const streamTarget = document.getElementById('stream-target');
 
       try {
-        const res = await fetch('/api/explain', {
+        const response = await fetch('/api/explain-stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: card.question, answer: card.answer, userQuery: query })
+          body: JSON.stringify({ question: card.question, answer: card.answer, userQuery })
         });
-        
-        if (!res.ok) {
-          const errText = await res.text();
-          throw new Error(`Server status ${res.status}: ${errText.slice(0, 100)}`);
-        }
 
-        const data = await res.json();
-        document.getElementById(loadingId).remove();
-        content.innerHTML += `
-          <div class="p-3.5 bg-neutral-50 border border-neutral-200 rounded-lg space-y-0.5">
-            <p class="font-bold text-[10px] text-neutral-900 mb-1">Nemotron AI Tutor:</p>
-            <p class="text-xs">${formatMarkdown(data.explanation)}</p>
-          </div>
-        `;
-        content.scrollTop = content.scrollHeight;
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          
+          lines.forEach(line => {
+            if (line.startsWith('data: ')) {
+              try {
+                const dataStr = line.slice(6);
+                if (dataStr.trim()) {
+                  const parsed = JSON.parse(dataStr);
+                  const token = parsed.choices?.[0]?.delta?.content || '';
+                  if (streamTarget) streamTarget.innerHTML += token.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                }
+              } catch (e) {}
+            }
+          });
+        }
       } catch (err) {
-        document.getElementById(loadingId).remove();
-        content.innerHTML += `<div class="p-3 bg-neutral-100 text-neutral-900 rounded-lg text-xs">Error: ${err.message}</div>`;
+        if (streamTarget) streamTarget.textContent = `Explanation: ${card.answer}`;
       }
     }
 
-    function closeAiModal() {
-      document.getElementById('aiModal').classList.add('hidden');
+    async function submitReview(rating) {
+      stopSpeech();
+      const card = currentDeckCards[currentIndex];
+      const srsActions = document.getElementById('srs-actions');
+      if (srsActions) srsActions.classList.add('opacity-40', 'pointer-events-none');
+
+      const toast = document.getElementById('feedback-toast');
+      if (toast) toast.classList.remove('hidden');
+
+      totalReviewsCount++;
+      localStorage.setItem('synapse_reviews', totalReviewsCount);
+
+      // Award XP based on recall rating
+      let xpEarned = 10;
+      if (rating === 'easy') xpEarned = 25;
+      else if (rating === 'good') xpEarned = 15;
+      addXP(xpEarned);
+
+      if (currentDeckIndex !== null && savedDecks[currentDeckIndex]) {
+        savedDecks[currentDeckIndex].totalReviews = (savedDecks[currentDeckIndex].totalReviews || 0) + 1;
+        if (rating === 'good' || rating === 'easy') {
+          savedDecks[currentDeckIndex].goodEasyReviews = (savedDecks[currentDeckIndex].goodEasyReviews || 0) + 1;
+          card.repetition_level = (card.repetition_level || 0) + 1;
+        } else {
+          card.repetition_level = 0;
+        }
+        localStorage.setItem('synapse_decks', JSON.stringify(savedDecks));
+      }
+
+      try {
+        await fetch('/api/review-card', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cardId: card.id, rating })
+        });
+      } catch (err) {
+        console.error('Failed to sync review:', err);
+      }
+
+      setTimeout(() => {
+        currentIndex++;
+        renderCard();
+      }, 400);
+    }
+
+    function renderCard() {
+      stopSpeech();
+      if (!currentDeckCards || currentIndex >= currentDeckCards.length) {
+        // Trigger winning Confetti explosion when deck is completed!
+        confetti({
+          particleCount: 150,
+          spread: 90,
+          origin: { y: 0.5 }
+        });
+
+        const tabStudy = document.getElementById('tab-study');
+        if (tabStudy) {
+          tabStudy.innerHTML = `
+            <div class="bg-white border border-slate-200/80 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-8 text-center space-y-4 max-w-lg mx-auto">
+              <h2 class="text-2xl font-bold text-slate-900">🎉 Deck Completed!</h2>
+              <p class="text-xs text-slate-500">Amazing job! You successfully finished this study session and earned XP.</p>
+              <button onclick="switchTab('dashboard')" class="bg-teal-600 hover:bg-teal-700 text-white font-medium px-5 py-2.5 rounded-xl text-xs transition-all shadow-sm">Return to Dashboard</button>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      const card = currentDeckCards[currentIndex];
+      isFlipped = false;
+      safeSetText('deck-progress', `Card ${currentIndex + 1} of ${currentDeckCards.length}`);
+      safeSetText('card-question', card.question);
+      safeSetText('card-answer', card.answer);
+
+      const cardInner = document.getElementById('card-inner');
+      if (cardInner) cardInner.style.transform = 'rotateY(0deg)';
+
+      const srsActions = document.getElementById('srs-actions');
+      if (srsActions) srsActions.classList.add('opacity-40', 'pointer-events-none');
+      
+      const toast = document.getElementById('feedback-toast');
+      if (toast) toast.classList.add('hidden');
+      
+      const transcriptBox = document.getElementById('voice-transcript-box');
+      if (transcriptBox) transcriptBox.classList.add('hidden');
+    }
+
+    function flipCard() {
+      stopSpeech();
+      isFlipped = !isFlipped;
+      const cardInner = document.getElementById('card-inner');
+      const srsActions = document.getElementById('srs-actions');
+
+      if (isFlipped) {
+        if (cardInner) cardInner.style.transform = 'rotateY(180deg)';
+        if (srsActions) srsActions.classList.remove('opacity-40', 'pointer-events-none');
+      } else {
+        if (cardInner) cardInner.style.transform = 'rotateY(0deg)';
+        if (srsActions) srsActions.classList.add('opacity-40', 'pointer-events-none');
+      }
+    }
+
+    function updateDashboardStats() {
+      safeSetText('stat-decks', savedDecks.length);
+      safeSetText('stat-reviews', totalReviewsCount);
+
+      let totalGoodEasy = 0;
+      let totalAll = 0;
+      savedDecks.forEach(d => {
+        totalGoodEasy += (d.goodEasyReviews || 0);
+        totalAll += (d.totalReviews || 0);
+      });
+
+      const avgConfidence = totalAll > 0 ? Math.round((totalGoodEasy / totalAll) * 100) : 0;
+      safeSetText('stat-confidence', avgConfidence + '%');
+    }
+
+    function renderSavedDecksList() {
+      const container = document.getElementById('saved-decks-list');
+      if (!container) return;
+
+      if (savedDecks.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-xs text-slate-400 border border-dashed border-slate-200 rounded-2xl">
+            No decks generated yet. Click "+ Create New Deck" to get started!
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = savedDecks.map((deck, idx) => {
+        const tRev = deck.totalReviews || 0;
+        const gRev = deck.goodEasyReviews || 0;
+        const deckConf = tRev > 0 ? Math.round((gRev / tRev) * 100) : 0;
+
+        return `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-slate-200/80 rounded-2xl hover:border-slate-400 transition-all bg-white gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+            <div class="space-y-1 pr-4">
+              <div class="flex flex-wrap items-center gap-2">
+                <h4 class="font-bold text-xs text-slate-900">${deck.title}</h4>
+                <span class="text-[10px] bg-teal-50 text-teal-700 font-semibold px-2 py-0.5 rounded-md border border-teal-100">${deck.sourceType}</span>
+                <span class="text-[10px] bg-slate-100 text-slate-800 font-semibold px-2 py-0.5 rounded-md border border-slate-200">Confidence: ${deckConf}%</span>
+              </div>
+              <p class="text-[11px] text-slate-500">${deck.sourceDetail}</p>
+              <p class="text-[10px] text-slate-400">${(deck.cards || []).length} Flashcards &bull; Created ${deck.date}</p>
+            </div>
+            <div class="flex items-center space-x-1.5 shrink-0 self-end sm:self-center">
+              <button onclick="startStudySession(${idx})" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs px-4 py-2 rounded-xl transition-all shadow-sm">
+                Study ⚡
+              </button>
+              <button onclick="deleteDeck(${idx})" class="text-slate-400 hover:text-red-600 hover:bg-slate-100 p-2 rounded-xl transition-all" title="Delete Deck">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function deleteDeck(index) {
+      if (confirm('Are you sure you want to delete this deck?')) {
+        savedDecks.splice(index, 1);
+        localStorage.setItem('synapse_decks', JSON.stringify(savedDecks));
+        updateDashboardStats();
+        renderSavedDecksList();
+        showToast('Deck deleted', 'info');
+      }
     }
 
     function startSmartReview() {
       if (savedDecks.length === 0) {
-        alert('No saved decks available for review.');
+        showToast('No saved decks available for review.', 'warning');
         return;
       }
       let dueCards = [];
@@ -641,15 +1032,26 @@
 
       if (dueCards.length === 0) {
         dueCards = savedDecks[0].cards || [];
-        alert('All cards are mastered! Starting general review session.');
+        showToast('All cards mastered! Starting general review session. 🔥', 'info');
       } else {
-        alert(`Found ${dueCards.length} cards needing review based on your Spaced Repetition score!`);
+        showToast(`Starting Smart Review with ${dueCards.length} due cards! 🔥`, 'success');
       }
 
       currentDeckIndex = null;
       currentDeckCards = dueCards;
       currentIndex = 0;
       safeSetText('current-deck-title', 'Smart Review (Due Cards 🔥)');
+      switchTab('study');
+      renderCard();
+    }
+
+    function startStudySession(index) {
+      stopSpeech();
+      currentDeckIndex = index;
+      const deck = savedDecks[index];
+      currentDeckCards = deck.cards || [];
+      currentIndex = 0;
+      safeSetText('current-deck-title', deck.title);
       switchTab('study');
       renderCard();
     }
@@ -669,17 +1071,17 @@
       if (tabStudy) tabStudy.classList.add('hidden');
       if (tabQuiz) tabQuiz.classList.add('hidden');
 
-      if (navDashboard) navDashboard.className = 'px-3.5 py-1 text-xs font-medium rounded-md text-neutral-500 hover:text-neutral-900 transition-all';
-      if (navGenerator) navGenerator.className = 'px-3.5 py-1 text-xs font-medium rounded-md text-neutral-500 hover:text-neutral-900 transition-all';
+      if (navDashboard) navDashboard.className = 'w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all text-left';
+      if (navGenerator) navGenerator.className = 'w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all text-left';
 
       if (tabName === 'dashboard') {
         if (tabDashboard) tabDashboard.classList.remove('hidden');
-        if (navDashboard) navDashboard.className = 'px-3.5 py-1 text-xs font-semibold rounded-md bg-white text-neutral-900 shadow-2xs transition-all';
+        if (navDashboard) navDashboard.className = 'w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-900 transition-all text-left';
         updateDashboardStats();
         renderSavedDecksList();
       } else if (tabName === 'generator') {
         if (tabGenerator) tabGenerator.classList.remove('hidden');
-        if (navGenerator) navGenerator.className = 'px-3.5 py-1 text-xs font-semibold rounded-md bg-white text-neutral-900 shadow-2xs transition-all';
+        if (navGenerator) navGenerator.className = 'w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-900 transition-all text-left';
       } else if (tabName === 'study') {
         if (tabStudy) tabStudy.classList.remove('hidden');
       } else if (tabName === 'quiz') {
@@ -702,17 +1104,17 @@
       const cardCount = countInput ? countInput.value : '10';
 
       if (!customTitle) {
-        alert('Please provide a name/title for your deck.');
+        showToast('Please provide a title for your deck.', 'warning');
         if (titleInput) titleInput.focus();
         return;
       }
 
       if (currentCreationMode === 'upload' && !pdfFile) {
-        alert('Please upload a PDF file.');
+        showToast('Please upload a PDF file.', 'warning');
         return;
       }
       if (currentCreationMode === 'chat' && !lectureContent) {
-        alert('Please provide notes or topics for the AI to learn from.');
+        showToast('Please provide notes or topics for the AI.', 'warning');
         return;
       }
 
@@ -770,9 +1172,11 @@
 
         updateDashboardStats();
         renderSavedDecksList();
+        showToast(`Deck "${customTitle}" generated & saved! 🚀`, 'success');
+        addXP(50); // Bonus XP for creating a deck!
         startStudySession(0);
       } catch (err) {
-        alert('Error: ' + err.message);
+        showToast('Error: ' + err.message, 'error');
       } finally {
         if (btn) {
           btn.disabled = false;
@@ -781,167 +1185,257 @@
       }
     }
 
-    function startStudySession(index) {
-      stopSpeech();
-      currentDeckIndex = index;
-      const deck = savedDecks[index];
-      currentDeckCards = deck.cards || [];
-      currentIndex = 0;
-      safeSetText('current-deck-title', deck.title);
-      switchTab('study');
-      renderCard();
+    function setCreationMode(mode) {
+      currentCreationMode = mode;
+      const uploadBox = document.getElementById('input-container-upload');
+      const chatBox = document.getElementById('input-container-chat');
+      
+      const uploadBtn = document.getElementById('mode-btn-upload');
+      const chatBtn = document.getElementById('mode-btn-chat');
+
+      uploadBox.classList.add('hidden');
+      chatBox.classList.add('hidden');
+
+      uploadBtn.className = 'py-2.5 text-xs font-medium rounded-lg text-slate-500 hover:text-slate-900 transition-all';
+      chatBtn.className = 'py-2.5 text-xs font-medium rounded-lg text-slate-500 hover:text-slate-900 transition-all';
+
+      if (mode === 'upload') {
+        uploadBox.classList.remove('hidden');
+        uploadBtn.className = 'py-2.5 text-xs font-semibold rounded-lg bg-white text-slate-900 shadow-2xs transition-all';
+      } else if (mode === 'chat') {
+        chatBox.classList.remove('hidden');
+        chatBtn.className = 'py-2.5 text-xs font-semibold rounded-lg bg-white text-slate-900 shadow-2xs transition-all';
+      }
     }
 
-    function renderCard() {
-      stopSpeech();
-      if (!currentDeckCards || currentIndex >= currentDeckCards.length) {
-        const tabStudy = document.getElementById('tab-study');
-        if (tabStudy) {
-          tabStudy.innerHTML = `
-            <div class="bg-white border border-border rounded-xl shadow-2xs p-8 text-center space-y-4 max-w-lg mx-auto">
-              <h2 class="text-lg font-bold text-neutral-900">🎉 Deck Completed!</h2>
-              <p class="text-xs text-neutral-500">Great job! You have successfully reviewed all cards in this session.</p>
-              <button onclick="switchTab('dashboard')" class="bg-neutral-900 hover:bg-neutral-800 text-white font-medium px-5 py-2 rounded-lg text-xs transition-all shadow-2xs">Return to Dashboard</button>
-            </div>
-          `;
-        }
+    function safeSetText(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    }
+
+    function stopSpeech() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        window.speechUtterances = [];
+      }
+    }
+
+    function speakText(elementId) {
+      if (!('speechSynthesis' in window)) {
+        showToast('Text-to-speech is not supported in your browser.', 'error');
         return;
       }
-
-      const card = currentDeckCards[currentIndex];
-      isFlipped = false;
-      safeSetText('deck-progress', `Card ${currentIndex + 1} of ${currentDeckCards.length}`);
-      safeSetText('card-question', card.question);
-      safeSetText('card-answer', card.answer);
-
-      const cardInner = document.getElementById('card-inner');
-      if (cardInner) cardInner.style.transform = 'rotateY(0deg)';
-
-      const srsActions = document.getElementById('srs-actions');
-      if (srsActions) srsActions.classList.add('opacity-40', 'pointer-events-none');
       
-      const toast = document.getElementById('feedback-toast');
-      if (toast) toast.classList.add('hidden');
-    }
-
-    function flipCard() {
       stopSpeech();
-      isFlipped = !isFlipped;
-      const cardInner = document.getElementById('card-inner');
-      const srsActions = document.getElementById('srs-actions');
+      const el = document.getElementById(elementId);
+      
+      if (el && el.textContent) {
+        const textToSpeak = el.textContent.trim();
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
 
-      if (isFlipped) {
-        if (cardInner) cardInner.style.transform = 'rotateY(180deg)';
-        if (srsActions) srsActions.classList.remove('opacity-40', 'pointer-events-none');
-      } else {
-        if (cardInner) cardInner.style.transform = 'rotateY(0deg)';
-        if (srsActions) srsActions.classList.add('opacity-40', 'pointer-events-none');
-      }
-    }
+        window.speechUtterances.push(utterance);
 
-    async function submitReview(rating) {
-      stopSpeech();
-      const card = currentDeckCards[currentIndex];
-      const srsActions = document.getElementById('srs-actions');
-      if (srsActions) srsActions.classList.add('opacity-40', 'pointer-events-none');
-
-      const toast = document.getElementById('feedback-toast');
-      if (toast) toast.classList.remove('hidden');
-
-      totalReviewsCount++;
-      localStorage.setItem('synapse_reviews', totalReviewsCount);
-
-      if (currentDeckIndex !== null && savedDecks[currentDeckIndex]) {
-        savedDecks[currentDeckIndex].totalReviews = (savedDecks[currentDeckIndex].totalReviews || 0) + 1;
-        if (rating === 'good' || rating === 'easy') {
-          savedDecks[currentDeckIndex].goodEasyReviews = (savedDecks[currentDeckIndex].goodEasyReviews || 0) + 1;
-          card.repetition_level = (card.repetition_level || 0) + 1;
-        } else {
-          card.repetition_level = 0;
+        const voiceSelect = document.getElementById('voiceSelect');
+        if (voiceSelect && voiceSelect.value !== '') {
+          const selectedVoice = availableVoices[parseInt(voiceSelect.value)];
+          if (selectedVoice) {
+            utterance.voice = selectedVoice;
+          }
         }
-        localStorage.setItem('synapse_decks', JSON.stringify(savedDecks));
-      }
 
-      try {
-        await fetch('/api/review-card', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cardId: card.id, rating })
-        });
-      } catch (err) {
-        console.error('Failed to sync review with Supabase:', err);
-      }
+        utterance.onend = () => {
+          window.speechUtterances = window.speechUtterances.filter(u => u !== utterance);
+        };
 
-      setTimeout(() => {
-        currentIndex++;
-        renderCard();
-      }, 700);
+        window.speechSynthesis.speak(utterance);
+      }
     }
 
-    function updateDashboardStats() {
-      safeSetText('stat-decks', savedDecks.length);
-      safeSetText('stat-reviews', totalReviewsCount);
+    function loadVoices() {
+      if (!('speechSynthesis' in window)) return;
+      
+      availableVoices = window.speechSynthesis.getVoices();
+      const select = document.getElementById('voiceSelect');
+      if (!select) return;
 
-      let totalGoodEasy = 0;
-      let totalAll = 0;
-      savedDecks.forEach(d => {
-        totalGoodEasy += (d.goodEasyReviews || 0);
-        totalAll += (d.totalReviews || 0);
+      const currentVal = select.value;
+      select.innerHTML = '<option value="">Default Voice</option>';
+
+      availableVoices.forEach((voice, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        let genderHint = '';
+        const nameLower = voice.name.toLowerCase();
+        if (nameLower.includes('male') || nameLower.includes('david') || nameLower.includes('george') || nameLower.includes('daniel') || nameLower.includes('oliver') || nameLower.includes('ryan')) {
+          genderHint = ' (Male)';
+        } else if (nameLower.includes('female') || nameLower.includes('zira') || nameLower.includes('sara') || nameLower.includes('jenna') || nameLower.includes('victoria') || nameLower.includes('karen')) {
+          genderHint = ' (Female)';
+        }
+        option.textContent = `${voice.name} [${voice.lang}]${genderHint}`;
+        select.appendChild(option);
       });
 
-      const avgConfidence = totalAll > 0 ? Math.round((totalGoodEasy / totalAll) * 100) : 0;
-      safeSetText('stat-confidence', avgConfidence + '%');
+      if (currentVal) select.value = currentVal;
     }
 
-    function renderSavedDecksList() {
-      const container = document.getElementById('saved-decks-list');
-      if (!container) return;
+    function closeAiModal() {
+      document.getElementById('aiModal').classList.add('hidden');
+    }
 
-      if (savedDecks.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-12 text-xs text-neutral-400 border border-dashed border-border rounded-lg">
-            No decks generated yet. Click "+ New Deck" to get started!
+    async function verifyWithTavily() {
+      const card = currentDeckCards[currentIndex];
+      const modal = document.getElementById('aiModal');
+      const content = document.getElementById('aiModalContent');
+
+      modal.classList.remove('hidden');
+      content.innerHTML = `<div class="p-3 bg-slate-100 text-slate-800 rounded-lg"><span class="animate-pulse">🌐 Tavily AI is searching live web references for "${card.question}"...</span></div>`;
+
+      try {
+        const res = await fetch('/api/verify-tavily', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: card.question, answer: card.answer })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        const sources = data.sources || [];
+        if (sources.length === 0) {
+          content.innerHTML = `<div class="p-3 bg-slate-50 text-slate-600 rounded-lg">No live sources found.</div>`;
+          return;
+        }
+
+        let sourcesHtml = sources.map(s => `
+          <div class="p-3 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-1 text-left">
+            <a href="${s.url}" target="_blank" class="text-xs font-bold text-slate-900 hover:underline flex items-center justify-between">
+              <span>${s.title}</span> 🔗
+            </a>
+            <p class="text-[11px] text-slate-500">${s.snippet}</p>
+          </div>
+        `).join('');
+
+        content.innerHTML = `
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <p class="font-bold text-xs text-slate-900 flex items-center justify-between">
+              <span>🌐 Tavily Live Verified Sources:</span>
+              <span class="text-[10px] bg-slate-200 text-slate-800 px-2 py-0.5 rounded font-mono">Real-time Web</span>
+            </p>
+            <div class="space-y-2 mt-2">${sourcesHtml}</div>
+          </div>
+        `;
+      } catch (err) {
+        content.innerHTML = `<div class="p-3.5 bg-slate-100 text-slate-900 rounded-xl">Tavily Search Error: ${err.message}</div>`;
+      }
+    }
+
+    async function startWeaknessQuiz() {
+      let weakCards = [];
+      savedDecks.forEach(deck => {
+        (deck.cards || []).forEach(card => {
+          if ((card.repetition_level || 0) < 2) {
+            weakCards.push(card);
+          }
+        });
+      });
+
+      if (weakCards.length === 0) {
+        showToast('No weak cards found! You are mastering everything.', 'info');
+        return;
+      }
+
+      switchTab('quiz');
+      const box = document.getElementById('quiz-container-box');
+      box.innerHTML = `<div class="text-center py-12 text-slate-700 font-medium"><span class="animate-pulse">🎯 Nemotron AI is building your custom Weakness Quiz page...</span></div>`;
+
+      try {
+        const res = await fetch('/api/weakness-quiz', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ weakCards: weakCards.slice(0, 5) })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        currentQuiz = {
+          questions: data.quizQuestions || [],
+          index: 0
+        };
+
+        renderQuizPage();
+      } catch (err) {
+        box.innerHTML = `<div class="p-4 bg-slate-100 text-slate-900 rounded-xl text-center">Error loading quiz: ${err.message}</div>`;
+      }
+    }
+
+    function renderQuizPage() {
+      const box = document.getElementById('quiz-container-box');
+      if (!currentQuiz.questions || currentQuiz.index >= currentQuiz.questions.length) {
+        box.innerHTML = `
+          <div class="text-center py-12 space-y-4">
+            <h2 class="text-2xl font-bold text-slate-900">🎉 Quiz Page Completed!</h2>
+            <p class="text-xs text-slate-500">You successfully targeted your weak spots with Nemotron AI.</p>
+            <button onclick="switchTab('dashboard')" class="bg-teal-600 hover:bg-teal-700 text-white font-medium px-5 py-2.5 rounded-xl text-xs transition-all shadow-sm">Return to Dashboard</button>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = savedDecks.map((deck, idx) => {
-        const tRev = deck.totalReviews || 0;
-        const gRev = deck.goodEasyReviews || 0;
-        const deckConf = tRev > 0 ? Math.round((gRev / tRev) * 100) : 0;
-
-        return `
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-xl hover:border-neutral-400 transition-all bg-white gap-3 shadow-2xs">
-            <div class="space-y-1 pr-4">
-              <div class="flex flex-wrap items-center gap-2">
-                <h4 class="font-bold text-xs text-neutral-900">${deck.title}</h4>
-                <span class="text-[10px] bg-neutral-100 text-neutral-800 font-semibold px-2 py-0.5 rounded border border-neutral-200">${deck.sourceType}</span>
-                <span class="text-[10px] bg-neutral-100 text-neutral-800 font-semibold px-2 py-0.5 rounded border border-neutral-200">Confidence: ${deckConf}%</span>
-              </div>
-              <p class="text-[11px] text-neutral-500">${deck.sourceDetail}</p>
-              <p class="text-[10px] text-neutral-400">${(deck.cards || []).length} Flashcards &bull; Created ${deck.date}</p>
-            </div>
-            <div class="flex items-center space-x-1.5 shrink-0 self-end sm:self-center">
-              <button onclick="startStudySession(${idx})" class="bg-neutral-900 hover:bg-neutral-800 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition-all shadow-2xs">
-                Study ⚡
-              </button>
-              <button onclick="deleteDeck(${idx})" class="text-neutral-400 hover:text-red-600 hover:bg-neutral-100 p-2 rounded-lg transition-all" title="Delete Deck">
-                🗑️
-              </button>
-            </div>
+      const q = currentQuiz.questions[currentQuiz.index];
+      box.innerHTML = `
+        <div class="space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <span class="text-[11px] font-bold text-slate-900 uppercase tracking-wider">Weakness Hunter Quiz</span>
+            <span class="text-[11px] font-semibold text-slate-400">Question ${currentQuiz.index + 1} of ${currentQuiz.questions.length}</span>
           </div>
-        `;
-      }).join('');
+          <h3 class="text-sm font-bold text-slate-900">${q.question}</h3>
+          <div class="space-y-2.5" id="quiz-options-list">
+            ${(q.options || []).map(opt => `
+              <button onclick="handleQuizSelection(this, '${opt.replace(/'/g, "\\'")}', '${q.correctAnswer.replace(/'/g, "\\'")}')" class="w-full text-left text-xs p-3.5 bg-slate-50 hover:bg-slate-100 border border-border rounded-xl transition-all font-medium text-slate-800">${opt}</button>
+            `).join('')}
+          </div>
+          <div id="quiz-correction-box" class="hidden p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
+            <p class="font-bold text-slate-900">💡 AI Hint & Direction:</p>
+            <p id="quiz-correction-text" class="text-slate-600"></p>
+          </div>
+          <div id="quiz-next-area" class="hidden pt-2">
+            <button onclick="currentQuiz.index++; renderQuizPage();" class="bg-teal-600 hover:bg-teal-700 text-white font-medium px-5 py-2.5 rounded-xl text-xs transition-all shadow-sm">Next Question →</button>
+          </div>
+        </div>
+      `;
     }
 
-    function deleteDeck(index) {
-      if (confirm('Are you sure you want to delete this deck?')) {
-        savedDecks.splice(index, 1);
-        localStorage.setItem('synapse_decks', JSON.stringify(savedDecks));
-        updateDashboardStats();
-        renderSavedDecksList();
+    function handleQuizSelection(btnElement, selected, correct) {
+      const buttons = document.querySelectorAll('#quiz-options-list button');
+      const isCorrect = selected.trim().toLowerCase() === correct.trim().toLowerCase();
+
+      buttons.forEach(b => {
+        b.disabled = true;
+        if (b.textContent.trim().toLowerCase() === correct.trim().toLowerCase()) {
+          b.className = 'w-full text-left text-xs p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-xl font-semibold';
+        } else if (b === btnElement) {
+          b.className = 'w-full text-left text-xs p-3.5 bg-red-50 border border-red-300 text-red-800 rounded-xl font-semibold';
+        } else {
+          b.className = 'w-full text-left text-xs p-3.5 bg-slate-50 opacity-40 border border-border rounded-xl font-medium text-slate-400';
+        }
+      });
+
+      const correctionBox = document.getElementById('quiz-correction-box');
+      const correctionText = document.getElementById('quiz-correction-text');
+
+      if (isCorrect) {
+        correctionBox.className = 'p-3.5 bg-emerald-50/60 border border-emerald-200 rounded-xl text-xs space-y-1';
+        correctionText.textContent = 'Spot on! You selected the correct answer.';
+        addXP(20); // Reward XP for correct quiz answer
+      } else {
+        correctionBox.className = 'p-3.5 bg-red-50/60 border border-red-200 rounded-xl text-xs space-y-1';
+        correctionText.textContent = `Not quite right. Hint: Re-evaluate the options that focus on the core foundational rule.`;
       }
+
+      correctionBox.classList.remove('hidden');
+      document.getElementById('quiz-next-area').classList.remove('hidden');
     }
   </script>
 </body>
